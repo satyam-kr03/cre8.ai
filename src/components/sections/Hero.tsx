@@ -58,9 +58,9 @@ export default function Hero() {
         <div className="flex flex-wrap justify-center gap-2">
           <Button variant="outline" className="rounded-full bg-white shadow-sm" size="sm">
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27Z" fill="currentColor"/>
+              <path d="M3 17.25V21H6.75L17.81 9.94L14.06 6.19L3 17.25ZM20.71 7.05C21.1 6.66 21.1 6.02 20.71 5.63L18.37 3.29C17.98 2.9 17.34 2.9 16.95 3.29L15.88 4.36L19.64 8.12L20.71 7.05Z" fill="currentColor"/>
             </svg>
-            Featured
+            Text
           </Button>
           <Button variant="outline" className="rounded-full bg-white shadow-sm" size="sm">
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
