@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, ChangeEvent, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from "@/components/layout/Header";
 import { cleanPromptText } from "@/lib/textUtils";
 import AIPromptButton from "@/components/ui/AIPromptButton";
@@ -23,20 +23,19 @@ const ImageGenerator = () => {
     const [uploadedImage, setUploadedImage] = useState<UploadedFile | null>(null);
     const [generatedImage, setGeneratedImage] = useState<string | null>(null);
     const [isMobile, setIsMobile] = useState(false);
+    const [variationStrength, setVariationStrength] = useState(0.5);
+    const [generationSteps, setGenerationSteps] = useState(25);
+    const [imageDimension, setImageDimension] = useState("1920x1080");
 
-    // Handle window resize and set mobile state
     useEffect(() => {
         const checkIsMobile = () => {
             setIsMobile(window.innerWidth < 640);
         };
         
-        // Set initial value
         checkIsMobile();
         
-        // Add event listener
         window.addEventListener('resize', checkIsMobile);
         
-        // Cleanup
         return () => window.removeEventListener('resize', checkIsMobile);
     }, []);
 
@@ -111,7 +110,6 @@ const ImageGenerator = () => {
             const generatedText = data.candidates[0].content.parts[0].text;
             console.log("Original text:", generatedText);
             
-            // Clean the text using our utility function
             const cleanedText = cleanPromptText(generatedText);
             
             console.log("Cleaned text:", cleanedText);
@@ -133,14 +131,20 @@ const ImageGenerator = () => {
             
             const client = new InferenceClient(HF_API_KEY);
             
+            const [width, height] = imageDimension.split('x').map(d => parseInt(d));
+            
             const image = await client.textToImage({
                 provider: "hf-inference",
                 model: "black-forest-labs/FLUX.1-dev",
                 inputs: prompt,
-                parameters: { num_inference_steps: 25 },
+                parameters: { 
+                    num_inference_steps: generationSteps,
+                    guidance_scale: variationStrength * 10,
+                    width: width,
+                    height: height
+                },
             });
             
-            // Convert the blob to a data URL for display
             const imageUrl = URL.createObjectURL(image);
             setGeneratedImage(imageUrl);
             
@@ -149,6 +153,35 @@ const ImageGenerator = () => {
             alert("An error occurred while generating the image.");
         } finally {
             setIsGeneratingImage(false);
+        }
+    };
+
+    const downloadImage = async () => {
+        if (!generatedImage) return;
+        
+        try {
+            // Fetch the image as a blob
+            const response = await fetch(generatedImage);
+            const blob = await response.blob();
+            
+            // Create a download link
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            
+            // Set filename with timestamp to make it unique
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            link.download = `generated-image-${timestamp}.png`;
+            
+            // Trigger the download
+            document.body.appendChild(link);
+            link.click();
+            
+            // Clean up
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+        } catch (error) {
+            console.error('Error downloading image:', error);
+            alert('Failed to download the image.');
         }
     };
 
@@ -162,85 +195,248 @@ const ImageGenerator = () => {
     }, [generatedImage]);
 
     return (
-        <div className="flex flex-col min-h-screen bg-[#2A2A2A] text-white">
+        <div className="flex flex-col min-h-screen bg-white text-gray-800">
             <Header />
             <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
                 {/* Sidebar */}
-                <div className="w-full md:w-[280px] bg-[#1D1D1D] p-4 overflow-y-auto">
-                    <div className="flex items-center justify-between">
+                <div className="w-full md:w-[300px] bg-gray-50 p-5 overflow-y-auto border-r border-gray-200">
+                    <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="mr-2">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="mr-2 text-blue-600">
                                 <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2" />
                                 <path d="M9 12H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                                 <path d="M12 9L12 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                             </svg>
-                            <span>Reference</span>
-                        </div>
-                        <div className="flex items-center gap-1">
+                            <span className="font-medium">Reference Image</span>
                         </div>
                     </div>
 
                     <ImageUploader 
                         onImageUpload={handleImageUpload}
                         uploadedImage={uploadedImage}
-                        className="mt-4"
+                        className="rounded-xl overflow-hidden shadow-sm border border-gray-200"
                     />
+                    
+                    {/* Generation Controls */}
+                    <div className="mt-8 space-y-5">
+                        <h2 className="text-lg font-semibold text-gray-800 mb-3">Generation Settings</h2>
+                        
+                        <div className="p-4 bg-white rounded-xl shadow-sm border border-gray-200">
+                            <h3 className="font-medium mb-3 text-gray-800 flex items-center">
+                                <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                                Variation Strength
+                            </h3>
+                            <div className="flex flex-col space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs text-gray-500">Subtle</span>
+                                    <span className="text-xs text-gray-500">Strong</span>
+                                </div>
+                                <input 
+                                    type="range" 
+                                    min="0" 
+                                    max="1" 
+                                    step="0.01" 
+                                    value={variationStrength}
+                                    onChange={(e) => setVariationStrength(parseFloat(e.target.value))}
+                                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                                />
+                                <div className="text-xs font-medium text-blue-600 text-right">
+                                    {variationStrength.toFixed(2)}
+                                </div>
+                            </div>
+                        </div>
 
+                        <div className="p-4 bg-white rounded-xl shadow-sm border border-gray-200">
+                            <h3 className="font-medium mb-3 text-gray-800 flex items-center">
+                                <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Generation Steps
+                            </h3>
+                            <div className="flex flex-col space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs text-gray-500">Faster</span>
+                                    <span className="text-xs text-gray-500">Higher Quality</span>
+                                </div>
+                                <input 
+                                    type="range" 
+                                    min="10" 
+                                    max="50" 
+                                    step="1" 
+                                    value={generationSteps}
+                                    onChange={(e) => setGenerationSteps(parseInt(e.target.value))}
+                                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                                />
+                                <div className="text-xs font-medium text-blue-600 text-right">
+                                    {generationSteps} steps
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="p-4 bg-white rounded-xl shadow-sm border border-gray-200">
+                            <h3 className="font-medium mb-3 text-gray-800 flex items-center">
+                                <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                                </svg>
+                                Image Dimensions
+                            </h3>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className={`relative border rounded-lg p-3 ${imageDimension === "1080x1080" ? "border-blue-500 bg-blue-50" : "border-gray-200"} transition-all cursor-pointer`}
+                                    onClick={() => setImageDimension("1080x1080")}>
+                                    <input 
+                                        type="radio" 
+                                        id="square" 
+                                        name="dimension" 
+                                        value="1080x1080"
+                                        checked={imageDimension === "1080x1080"}
+                                        onChange={(e) => setImageDimension(e.target.value)}
+                                        className="sr-only" 
+                                    />
+                                    <label htmlFor="square" className="text-sm flex flex-col items-center cursor-pointer">
+                                        <div className="w-12 h-12 bg-gray-100 border border-gray-300 mb-1 rounded-md"></div>
+                                        <span className={imageDimension === "1080x1080" ? "text-blue-600 font-medium" : "text-gray-600"}>Square</span>
+                                        <span className="text-xs text-gray-500">1080×1080</span>
+                                    </label>
+                                    {imageDimension === "1080x1080" && (
+                                        <div className="absolute top-2 right-2 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className={`relative border rounded-lg p-3 ${imageDimension === "1920x1080" ? "border-blue-500 bg-blue-50" : "border-gray-200"} transition-all cursor-pointer`}
+                                    onClick={() => setImageDimension("1920x1080")}>
+                                    <input 
+                                        type="radio" 
+                                        id="landscape" 
+                                        name="dimension" 
+                                        value="1920x1080"
+                                        checked={imageDimension === "1920x1080"}
+                                        onChange={(e) => setImageDimension(e.target.value)}
+                                        className="sr-only" 
+                                    />
+                                    <label htmlFor="landscape" className="text-sm flex flex-col items-center cursor-pointer">
+                                        <div className="w-14 h-10 bg-gray-100 border border-gray-300 mb-1 rounded-md"></div>
+                                        <span className={imageDimension === "1920x1080" ? "text-blue-600 font-medium" : "text-gray-600"}>Landscape</span>
+                                        <span className="text-xs text-gray-500">1920×1080</span>
+                                    </label>
+                                    {imageDimension === "1920x1080" && (
+                                        <div className="absolute top-2 right-2 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Main Content */}
-                <div className="flex-1 flex flex-col p-4 overflow-y-auto">
+                <div className="flex-1 flex flex-col p-5 overflow-y-auto bg-gray-50">
                     {isGeneratingImage ? (
-                        <div className="flex-1 flex flex-col items-center justify-center mb-4">
-                            <div className="relative w-full max-w-2xl h-64 sm:h-80 md:h-[450px] lg:h-[550px] rounded-lg overflow-hidden shadow-xl bg-[#333333] flex items-center justify-center">
-                                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/30 via-blue-500/30 to-pink-500/30 animate-gradient bg-300% shadow-[0_0_30px_rgba(192,132,252,0.5)]"></div>
-                                <div className="z-10 text-xl sm:text-2xl font-bold text-white text-center px-4">Generating image...</div>
+                        <div className="flex-1 flex flex-col items-center justify-center">
+                            <div className="relative w-full h-[calc(100vh-340px)] min-h-[300px] max-h-[60vh] rounded-xl overflow-hidden shadow-md bg-gray-200 flex items-center justify-center">
+                                <div className="absolute inset-0 bg-gradient-to-r from-blue-100/50 via-purple-100/50 to-pink-100/50 animate-gradient bg-300% shadow-[0_0_30px_rgba(192,132,252,0.3)]"></div>
+                                <div className="z-10 flex flex-col items-center">
+                                    <div className="w-12 h-12 rounded-full border-4 border-t-blue-500 border-r-transparent border-b-purple-500 border-l-transparent animate-spin mb-4"></div>
+                                    <div className="text-xl sm:text-2xl font-bold text-gray-800 text-center px-4">Generating image...</div>
+                                    <div className="text-sm text-gray-600 mt-2">This may take a few moments</div>
+                                </div>
                             </div>
                         </div>
                     ) : !generatedImage ? (
                         <div className="flex-1 flex flex-col items-center justify-center">
-                            <div className="w-16 h-16 sm:w-20 sm:h-20 mb-4">
-                                <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <rect x="10" y="10" width="80" height="80" rx="10" stroke="#FF6B6B" strokeWidth="4" />
-                                    <path d="M30 50L45 65L70 35" stroke="#FF6B6B" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-                                    <circle cx="75" cy="25" r="10" fill="#FF6B6B" />
-                                </svg>
+                            <div className="w-24 h-24 sm:w-28 sm:h-28">
+                                <Image 
+                                    src="/images/infi.png"
+                                    alt="Enhance image generator"
+                                    width={100}
+                                    height={100}
+                                    priority
+                                />
                             </div>
-                            <h1 className="text-2xl sm:text-3xl font-bold mb-4 text-center">Start generating images</h1>
-                            <p className="text-center text-gray-300 max-w-xl mb-8 px-4">
-                                Describe the image you want to generate in the prompt field, or go to Gallery and select images generated with sample prompts for you to try.
+                            <h1 className="text-2xl sm:text-3xl font-bold mb-4 text-center text-gray-800">Start generating images</h1>
+                            <p className="text-center text-gray-600 max-w-xl mb-8 px-4">
+                                Describe the image you want to generate in the prompt field, or upload a reference image to enhance your results.
                             </p>
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                                <div className="flex items-center bg-white p-3 rounded-lg shadow-sm border border-gray-200">
+                                    <div className="p-2 bg-blue-100 rounded-lg mr-3">
+                                        <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 className="font-medium">Write a prompt</h3>
+                                        <p className="text-xs text-gray-500">Describe what you want to create</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center bg-white p-3 rounded-lg shadow-sm border border-gray-200">
+                                    <div className="p-2 bg-purple-100 rounded-lg mr-3">
+                                        <svg className="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 className="font-medium">Upload reference</h3>
+                                        <p className="text-xs text-gray-500">Provide an image for inspiration</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     ) : (
-                        <div className="flex-1 flex flex-col items-center justify-center mb-4">
-                            <div className="relative w-full max-w-2xl h-64 sm:h-80 md:h-[450px] lg:h-[550px] rounded-lg overflow-hidden shadow-xl">
+                        <div className="flex-1 flex flex-col items-center justify-center">
+                            <div className="relative w-full h-[calc(100vh-340px)] min-h-[300px] max-h-[60vh] rounded-xl overflow-hidden shadow-sm border border-gray-100 bg-transparent">
                                 <Image 
                                     src={generatedImage}
                                     alt={prompt}
                                     fill
                                     className="object-contain"
+                                    sizes="(max-width: 768px) 100vw, 80vw"
+                                    priority
                                 />
+                            </div>
+                            <div className="flex gap-2 mt-2 mb-2">
+                                <button 
+                                    onClick={downloadImage}
+                                    className="flex items-center gap-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors font-medium shadow-sm"
+                                >
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                    </svg>
+                                    Save Image
+                                </button>
                             </div>
                         </div>
                     )}
 
-                    <div className="relative mt-4">
-                        <div className="relative border border-gray-700 rounded-lg bg-[#222222] overflow-hidden">
+                    <div className="relative mt-2">
+                        <div className="relative border border-gray-300 rounded-xl bg-white overflow-hidden shadow-sm">
                             <div className={`absolute inset-0 blur-md ${
                                 isGeneratingDesc 
-                                ? 'bg-gradient-to-r from-purple-500 via-blue-500 to-pink-500 animate-gradient bg-300% shadow-[0_0_30px_rgba(192,132,252,0.5)]' 
+                                ? 'bg-gradient-to-r from-blue-100 via-purple-100 to-pink-100 animate-gradient bg-300% shadow-[0_0_30px_rgba(192,132,252,0.3)]' 
                                 : ''
                             }`} />
                             
-                            <div className="pt-3 px-4 text-xs text-gray-400 relative z-10">Prompt</div>
+                            <div className="pt-3 px-4 text-xs text-gray-500 relative z-10 flex items-center">
+                                <svg className="w-3 h-3 mr-1 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
+                                Prompt
+                            </div>
                             <textarea
                                 placeholder="Describe the image you want to generate"
                                 value={prompt}
                                 onChange={(e) => setPrompt(e.target.value)}
-                                className={`w-full bg-transparent p-4 outline-none resize-none h-20 relative z-10 ${
-                                    isGeneratingDesc 
-                                    ? 'bg-gradient-to-r from-purple-400 via-blue-300 to-pink-300 bg-clip-text text-transparent bg-300% animate-gradient font-bold' 
-                                    : 'text-white'
+                                className={`w-full bg-transparent p-4 outline-none resize-none h-28 relative z-10 ${
+                                    isGeneratingDesc
+                                    ? 'bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent bg-300% animate-gradient font-bold' 
+                                    : 'text-gray-800'
                                 }`}
                             />
                         </div>
@@ -251,17 +447,33 @@ const ImageGenerator = () => {
                                 disabled={isGeneratingDesc || isGeneratingImage || !uploadedImage}
                                 isGenerating={isGeneratingDesc}
                                 size={isMobile ? 'sm' : 'md'}
+                                tooltipText={!uploadedImage ? "Upload an image first" : "Generate AI description from image"}
                             />
                             <button 
-                                className={`px-3 py-1.5 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg font-medium ${
+                                className={`px-3 py-1.5 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg font-medium text-white flex items-center gap-1 ${
                                     isGeneratingImage 
-                                    ? 'bg-purple-600 animate-pulse' 
+                                    ? 'bg-purple-500 animate-pulse' 
                                     : 'bg-blue-600 hover:bg-blue-700 transition-colors'
                                 }`}
                                 onClick={generateImage}
                                 disabled={isGeneratingImage || !prompt.trim()}
                             >
-                                {isGeneratingImage ? 'Generating...' : 'Generate'}
+                                {isGeneratingImage ? (
+                                    <>
+                                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Generating...
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                        </svg>
+                                        Generate
+                                    </>
+                                )}
                             </button>
                         </div>
                     </div>

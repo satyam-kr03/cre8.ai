@@ -36,10 +36,10 @@ export default function AIPromptButton({
       className={`
         ${buttonSize} 
         flex items-center justify-center 
-        rounded-lg bg-[#333333] 
+        rounded-lg bg-gray-100 border border-gray-300
         group relative 
         ${position === 'absolute' ? 'absolute top-2 right-2' : ''}
-        ${disabled && !isGenerating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+        ${disabled && !isGenerating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-200'}
         transition-all duration-300
         ${className}
       `}
@@ -47,13 +47,13 @@ export default function AIPromptButton({
     >
       <span className={`material-icons ${
         isGenerating 
-          ? 'bg-gradient-to-r from-purple-200 via-blue-200 to-white bg-clip-text text-transparent bg-300% animate-gradient' 
-          : 'text-blue-400 hover:text-blue-300 transition-colors'
+          ? 'bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent bg-300% animate-gradient' 
+          : 'text-blue-600 hover:text-blue-700 transition-colors'
       }`}>
         auto_awesome
       </span>
       {tooltipText && (
-        <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
+        <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-white border border-gray-200 text-gray-800 text-xs px-2 py-1 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
           {tooltipText}
         </div>
       )}

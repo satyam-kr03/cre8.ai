@@ -133,12 +133,12 @@ const PromptTextGenerator = () => {
     };
 
     return (
-        <div className="flex flex-col min-h-screen bg-[#2A2A2A] text-white">
+        <div className="flex flex-col min-h-screen bg-white text-gray-800">
             <Header />
             <div className="relative flex flex-col md:flex-row flex-1 overflow-hidden">
                 {/* Mobile toggle for sidebar */}
                 <button 
-                    className="md:hidden flex items-center justify-center p-3 m-2 bg-[#333333] rounded-md hover:bg-[#444444]"
+                    className="md:hidden flex items-center justify-center p-3 m-2 bg-gray-200 rounded-md hover:bg-gray-300"
                     onClick={() => setShowSidebar(!showSidebar)}
                 >
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -148,7 +148,7 @@ const PromptTextGenerator = () => {
                 </button>
                 
                 {/* Sidebar */}
-                <div className={`${showSidebar ? 'block' : 'hidden'} w-full md:w-[280px] bg-[#1D1D1D] p-4 overflow-y-auto md:block`}>
+                <div className={`${showSidebar ? 'block' : 'hidden'} w-full md:w-[280px] bg-gray-100 p-4 overflow-y-auto md:block border-r border-gray-200`}>
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="mr-2">
@@ -179,7 +179,7 @@ const PromptTextGenerator = () => {
                     </div>
                     
                     <div className="space-y-4">
-                        <div className="p-3 bg-[#333333] rounded-lg">
+                        <div className="p-3 bg-white rounded-lg shadow-sm border border-gray-200">
                             <h3 className="font-medium mb-2">Writing Style</h3>
                             <div className="space-y-2">
                                 <div className="flex items-center">
@@ -197,7 +197,7 @@ const PromptTextGenerator = () => {
                             </div>
                         </div>
                         
-                        <div className="p-3 bg-[#333333] rounded-lg">
+                        <div className="p-3 bg-white rounded-lg shadow-sm border border-gray-200">
                             <h3 className="font-medium mb-2">Length</h3>
                             <div className="space-y-2">
                                 <div className="flex items-center">
@@ -218,28 +218,28 @@ const PromptTextGenerator = () => {
                 </div>
 
                 {/* Main Content */}
-                <div className="flex-1 flex flex-col p-4 overflow-y-auto">
-                    <h1 className="text-xl sm:text-2xl font-bold mb-4">Prompt Text Generator</h1>
+                <div className="flex-1 flex flex-col p-4 overflow-y-auto bg-gray-50">
+                    <h1 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800">Prompt Text Generator</h1>
                     
                     {/* Prompt Input */}
                     <div className="relative mb-4">
-                        <div className="relative border border-gray-700 rounded-lg bg-[#222222] overflow-hidden">
+                        <div className="relative border border-gray-300 rounded-lg bg-white overflow-hidden shadow-sm">
                             {/* Animated background that shows when generating */}
                             <div className={`absolute inset-0 blur-md ${
                                 isGenerating 
-                                ? 'bg-gradient-to-r from-purple-500 via-blue-500 to-pink-500 animate-gradient bg-300% shadow-[0_0_30px_rgba(192,132,252,0.5)]' 
+                                ? 'bg-gradient-to-r from-blue-100 via-purple-100 to-pink-100 animate-gradient bg-300% shadow-[0_0_30px_rgba(192,132,252,0.3)]' 
                                 : ''
                             }`} />
                             
-                            <div className="pt-3 px-4 text-xs text-gray-400 relative z-10">Prompt</div>
+                            <div className="pt-3 px-4 text-xs text-gray-500 relative z-10">Prompt</div>
                             <textarea
                                 placeholder="Describe what you want to generate"
                                 value={prompt}
                                 onChange={(e) => setPrompt(e.target.value)}
                                 className={`w-full bg-transparent p-4 outline-none resize-none h-20 relative z-10 ${
                                     isGenerating 
-                                    ? 'bg-gradient-to-r from-purple-400 via-blue-300 to-pink-300 bg-clip-text text-transparent bg-300% animate-gradient font-bold' 
-                                    : 'text-white'
+                                    ? 'bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent bg-300% animate-gradient font-bold' 
+                                    : 'text-gray-800'
                                 }`}
                             />
                         </div>
@@ -254,9 +254,9 @@ const PromptTextGenerator = () => {
                             />
                             <div className="flex flex-wrap gap-2 mt-1 sm:mt-0">
                                 <button 
-                                    className={`px-2 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm rounded-lg font-medium ${
+                                    className={`px-2 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm rounded-lg font-medium text-white ${
                                         isGenerating 
-                                        ? 'bg-purple-600 animate-pulse' 
+                                        ? 'bg-purple-500 animate-pulse' 
                                         : 'bg-blue-600 hover:bg-blue-700 transition-colors'
                                     }`}
                                     onClick={generateAIText}
@@ -265,9 +265,9 @@ const PromptTextGenerator = () => {
                                     {isMobile ? 'Text' : isGenerating ? 'Generating...' : 'Generate Text'}
                                 </button>
                                 <button 
-                                    className={`px-2 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm rounded-lg font-medium ${
+                                    className={`px-2 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm rounded-lg font-medium text-white ${
                                         isGeneratingImage 
-                                        ? 'bg-purple-600 animate-pulse' 
+                                        ? 'bg-purple-500 animate-pulse' 
                                         : 'bg-green-600 hover:bg-green-700 transition-colors'
                                     }`}
                                     onClick={generateImage}
@@ -281,9 +281,9 @@ const PromptTextGenerator = () => {
                     
                     {/* Generated Content */}
                     {generatedText && (
-                        <div className="border border-gray-700 rounded-lg bg-[#222222] p-4 mt-4">
-                            <div className="text-xs text-gray-400 mb-2">Generated Text</div>
-                            <div className="whitespace-pre-wrap">
+                        <div className="border border-gray-300 rounded-lg bg-white p-4 mt-4 shadow-sm">
+                            <div className="text-xs text-gray-500 mb-2">Generated Text</div>
+                            <div className="whitespace-pre-wrap text-gray-800">
                                 {generatedText}
                             </div>
                         </div>
@@ -291,17 +291,17 @@ const PromptTextGenerator = () => {
                     
                     {/* Generated Image */}
                     {isGeneratingImage ? (
-                        <div className="border border-gray-700 rounded-lg bg-[#222222] p-4 mt-4">
-                            <div className="text-xs text-gray-400 mb-2">Generated Image</div>
-                            <div className="relative w-full h-48 sm:h-64 md:h-80 overflow-hidden rounded bg-[#333333] flex items-center justify-center">
-                                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/30 via-blue-500/30 to-pink-500/30 animate-gradient bg-300% shadow-[0_0_30px_rgba(192,132,252,0.5)]"></div>
-                                <div className="z-10 text-lg sm:text-xl font-bold text-white text-center px-4">Generating image...</div>
+                        <div className="border border-gray-300 rounded-lg bg-white p-4 mt-4 shadow-sm">
+                            <div className="text-xs text-gray-500 mb-2">Generated Image</div>
+                            <div className="relative w-full h-48 sm:h-64 md:h-80 overflow-hidden rounded bg-gray-200 flex items-center justify-center">
+                                <div className="absolute inset-0 bg-gradient-to-r from-blue-100/50 via-purple-100/50 to-pink-100/50 animate-gradient bg-300% shadow-[0_0_30px_rgba(192,132,252,0.3)]"></div>
+                                <div className="z-10 text-lg sm:text-xl font-bold text-gray-800 text-center px-4">Generating image...</div>
                             </div>
                         </div>
                     ) : generatedImage && (
-                        <div className="border border-gray-700 rounded-lg bg-[#222222] p-4 mt-4">
-                            <div className="text-xs text-gray-400 mb-2">Generated Image</div>
-                            <div className="relative w-full h-48 sm:h-64 md:h-80 overflow-hidden rounded">
+                        <div className="border border-gray-300 rounded-lg bg-white p-4 mt-4 shadow-sm">
+                            <div className="text-xs text-gray-500 mb-2">Generated Image</div>
+                            <div className="relative w-full h-48 sm:h-64 md:h-80 overflow-hidden rounded border border-gray-200">
                                 <Image 
                                     src={generatedImage}
                                     alt={prompt}

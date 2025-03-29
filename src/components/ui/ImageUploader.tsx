@@ -49,13 +49,13 @@ export default function ImageUploader({ onImageUpload, uploadedImage, className 
     };
 
     return (
-        <div className={`border border-dashed border-gray-500 rounded-lg p-4 text-center ${className}`}>
+        <div className={`border border-dashed border-gray-400 rounded-lg p-4 text-center bg-white ${className}`}>
             {!uploadedImage ? (
                 <div className="flex flex-col items-center mb-2">
                     <button 
                         type="button" 
                         onClick={triggerFileInput} 
-                        className="cursor-pointer flex flex-col items-center"
+                        className="cursor-pointer flex flex-col items-center text-gray-700 hover:text-blue-600 transition-colors"
                     >
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="mb-2">
                             <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2" />
@@ -74,7 +74,7 @@ export default function ImageUploader({ onImageUpload, uploadedImage, className 
                 </div>
             ) : (
                 <div className="flex flex-col items-center">
-                    <div className="relative w-full h-32 mb-2 overflow-hidden rounded">
+                    <div className="relative w-full h-32 mb-2 overflow-hidden rounded border border-gray-200 shadow-sm">
                         <Image 
                             src={previewUrl || uploadedImage.preview || ''}
                             alt={uploadedImage.name}
@@ -84,14 +84,14 @@ export default function ImageUploader({ onImageUpload, uploadedImage, className 
                         <button
                             type="button"
                             onClick={triggerFileInput}
-                            className="absolute bottom-2 right-2 bg-black bg-opacity-60 rounded-full p-1"
+                            className="absolute bottom-2 right-2 bg-white bg-opacity-80 rounded-full p-1 shadow-sm hover:bg-opacity-100 transition-all"
                         >
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                <path d="M3 18H21V16H3V18ZM3 13H21V11H3V13ZM3 6V8H21V6H3Z" fill="white" />
+                                <path d="M3 18H21V16H3V18ZM3 13H21V11H3V13ZM3 6V8H21V6H3Z" fill="#4B5563" />
                             </svg>
                         </button>
                     </div>
-                    <div className="text-xs text-gray-300 truncate max-w-full">
+                    <div className="text-xs text-gray-600 truncate max-w-full">
                         {uploadedImage.name}
                     </div>
                     <input 
