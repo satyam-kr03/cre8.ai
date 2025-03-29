@@ -6,7 +6,6 @@ import AIPromptButton from "@/components/ui/AIPromptButton";
 import Image from "next/image";
 import { useRouter } from 'next/navigation';
 
-const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
 const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 
 const VideoGenerator = () => {
@@ -16,11 +15,9 @@ const VideoGenerator = () => {
     const [isMobile, setIsMobile] = useState(false);
     const [generatedVideos, setGeneratedVideos] = useState<string[]>([]);
     const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
-    const [isEditing, setIsEditing] = useState(false);
     const [isGeneratingDesc, setIsGeneratingDesc] = useState(false);
     const [uploadedImage, setUploadedImage] = useState<string | null>(null);
     
-    // Video settings
     const [aspectRatio, setAspectRatio] = useState("16:9");
     const [framesPerSecond, setFramesPerSecond] = useState(24);
     const [shotSize, setShotSize] = useState("none");
@@ -226,30 +223,6 @@ const VideoGenerator = () => {
             }
         };
     }, [generatedVideos, uploadedImage]);
-
-    const handleEditClick = () => {
-        // Store the current video data in localStorage or state management
-        const videoData = {
-            clips: generatedVideos.map((url, index) => ({
-                id: `clip-${index}`,
-                url,
-                startTime: 0,
-                duration: 5, // Default duration, you might want to get actual video duration
-                thumbnail: url // Using video URL as thumbnail for now
-            })),
-            prompt,
-            settings: {
-                aspectRatio,
-                framesPerSecond,
-                shotSize,
-                cameraAngle,
-                motionType
-            }
-        };
-        
-        localStorage.setItem('videoEditorData', JSON.stringify(videoData));
-        router.push('/create/video/editor');
-    };
 
   return (
         <div className="flex flex-col min-h-screen bg-white text-gray-800">
@@ -617,18 +590,7 @@ const VideoGenerator = () => {
                                         Prompt
                                     </button>
                                 </div>
-                                <div className="ml-auto">
-                                    <button
-                                        onClick={handleEditClick}
-                                        className="flex items-center px-3 py-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg shadow-sm hover:from-indigo-600 hover:to-purple-700 transition-all"
-                                        title="Edit video"
-                                    >
-                                        <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                        </svg>
-                                        Edit
-                                    </button>
-                                </div>
+                               
                             </div>
                             
                             <div className="relative">

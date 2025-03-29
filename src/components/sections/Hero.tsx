@@ -81,12 +81,14 @@ export default function Hero() {
             Video
           </Button>
           </Link>
+          <Link href="/create/audio">
           <Button variant="outline" className="rounded-full bg-white shadow-sm" size="sm">
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 3V13.55C11.41 13.21 10.73 13 10 13C7.79 13 6 14.79 6 17C6 19.21 7.79 21 10 21C12.21 21 14 19.21 14 17V7H18V3H12Z" fill="currentColor"/>
             </svg>
             Audio
           </Button>
+          </Link>
           <Button variant="outline" className="rounded-full bg-white shadow-sm" size="sm">
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M9.4 16.6L4.8 12L9.4 7.4L8 6L2 12L8 18L9.4 16.6ZM14.6 16.6L19.2 12L14.6 7.4L16 6L22 12L16 18L14.6 16.6Z" fill="currentColor"/>

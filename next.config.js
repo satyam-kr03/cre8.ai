@@ -48,6 +48,14 @@ const nextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'https://cool-starfish-suitable.ngrok-free.app/:path*',
+      },
+    ]
+  },
 };
 
 module.exports = nextConfig;
