@@ -57,12 +57,14 @@ export default function Hero() {
 
         {/* Feature Quick Access Tabs */}
         <div className="flex flex-wrap justify-center gap-2">
-          <Button variant="outline" className="rounded-full bg-white shadow-sm" size="sm">
+          <Link href="/create/text">
+            <Button variant="outline" className="rounded-full bg-white shadow-sm" size="sm">
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M3 17.25V21H6.75L17.81 9.94L14.06 6.19L3 17.25ZM20.71 7.05C21.1 6.66 21.1 6.02 20.71 5.63L18.37 3.29C17.98 2.9 17.34 2.9 16.95 3.29L15.88 4.36L19.64 8.12L20.71 7.05Z" fill="currentColor"/>
             </svg>
             Text
           </Button>
+          </Link>
           <Link href="/create/image">
             <Button variant="outline" className="rounded-full bg-white shadow-sm" size="sm">
               <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -71,12 +73,14 @@ export default function Hero() {
               Image
             </Button>
           </Link>
+          <Link href="/create/video"> 
           <Button variant="outline" className="rounded-full bg-white shadow-sm" size="sm">
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M17 10.5V7C17 6.45 16.55 6 16 6H4C3.45 6 3 6.45 3 7V17C3 17.55 3.45 18 4 18H16C16.55 18 17 17.55 17 17V13.5L21 17.5V6.5L17 10.5Z" fill="currentColor"/>
             </svg>
             Video
           </Button>
+          </Link>
           <Button variant="outline" className="rounded-full bg-white shadow-sm" size="sm">
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 3V13.55C11.41 13.21 10.73 13 10 13C7.79 13 6 14.79 6 17C6 19.21 7.79 21 10 21C12.21 21 14 19.21 14 17V7H18V3H12Z" fill="currentColor"/>
