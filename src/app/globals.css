@@ -2,6 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Gradient animation for the auto awesome button */
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient {
+  animation: gradient 3s linear infinite;
+}
+
+.bg-300\% {
+  background-size: 300% 300%;
+}
+
+/* Add glowing shadow for enhanced effect */
+.animate-gradient-glow {
+  animation: gradient 3s linear infinite;
+  box-shadow: 0 0 15px rgba(192, 132, 252, 0.5);
+  transition: box-shadow 0.3s ease;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
