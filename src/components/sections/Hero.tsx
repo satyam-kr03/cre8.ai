@@ -15,7 +15,7 @@ export default function Hero() {
       </div>
 
       <div className="relative max-w-screen-xl mx-auto px-4 text-center">
-        <p className="text-blue-600 font-medium mb-2">Generate images, audio, and now video.</p>
+        <p className="text-blue-600 font-medium mb-2">Generate images, audio, and video.</p>
         
         {/* Animation positioned behind the heading */}
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-xl z-0 opacity-30">
