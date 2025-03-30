@@ -17,12 +17,12 @@ export default function FeaturesGrid() {
       link: "/create/pixar",
     },
     {
-      title: "Scene to image (beta)",
-      description: "Create captivating images using 3D shapes.",
+      title: "Image to Sound Effects",
+      description: "Create sound effects from images.",
       imageSrc: "https://ext.same-assets.com/426488002/3214720549.bin",
       badge: "New",
-      alt: "Scene to image feature",
-      link: "/",
+      alt: "Image to sound effects feature",
+      link: "/create/sound-effects",
     },
   ];
 
