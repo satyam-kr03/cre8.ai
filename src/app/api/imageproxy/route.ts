@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const API_BASE_URL = "https://cool-starfish-suitable.ngrok-free.app";
+const API_BASE_URL = process.env.EXTERNAL_API_BASE_URL;
+
+if (!API_BASE_URL) {
+  throw new Error('Please define the EXTERNAL_API_BASE_URL environment variable in .env.local');
+}
 
 // Default image sizes
 const DEFAULT_SIZES = {
-  SQUARE: { width: 1280, height: 1280 },
-  LANDSCAPE: { width: 2048, height: 1280 }
+  SQUARE: { width: 640, height: 640 },
+  LANDSCAPE: { width: 1280, height: 640 }
 };
 
 // Default generation steps
@@ -16,12 +20,23 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('Received request body:', JSON.stringify(body, null, 2).substring(0, 300) + '...'); // Log first 300 chars
     
-    const { endpoint, prompt, init_image, size = 'LANDSCAPE', steps = DEFAULT_STEPS } = body;
+    const { 
+      endpoint, 
+      prompt, 
+      init_image, 
+      size = 'LANDSCAPE', 
+      steps = DEFAULT_STEPS, 
+      strength // Add strength for Ghibli
+    } = body;
     
-    console.log(`Processing ${endpoint} request with prompt: "${prompt.substring(0, 30)}..."`);
+    console.log(`Processing ${endpoint} request with prompt: "${prompt?.substring(0, 30)}..."`);
     
     // Determine which API endpoint to use
-    const apiEndpoint = endpoint === 'img2img' ? 'img2img' : 'text2img';
+    let apiEndpoint = endpoint; // Use the endpoint directly
+    if (!['img2img', 'text2img', 'img2ghibli'].includes(apiEndpoint)) {
+      apiEndpoint = init_image ? 'img2img' : 'text2img'; // Fallback logic
+      console.warn(`Invalid endpoint specified, defaulting to ${apiEndpoint}`);
+    }
     
     // Set width and height based on selected size
     const { width, height } = size === 'SQUARE' 
@@ -54,6 +69,30 @@ export async function POST(request: NextRequest) {
       
       console.log('Sending multipart/form-data request to:', `${API_BASE_URL}/${apiEndpoint}/`);
       
+      response = await fetch(`${API_BASE_URL}/${apiEndpoint}/`, {
+        method: 'POST',
+        body: formData
+      });
+    } else if (apiEndpoint === 'img2ghibli') {
+      console.log('Using img2ghibli endpoint');
+      if (!init_image) {
+        return NextResponse.json({ error: 'Missing required image for img2ghibli' }, { status: 400 });
+      }
+      
+      const formData = new FormData();
+      
+      if (prompt) formData.append('prompt', prompt);
+      formData.append('strength', strength ? strength.toString() : '0.8'); // Default strength if not provided
+      formData.append('width', width.toString());
+      formData.append('height', height.toString());
+      // Add other img2ghibli specific params if needed (e.g., style_ratio, cfg_scale, control_strength, sampling_method)
+      if (steps) formData.append('steps', steps.toString()); // Assuming steps is used
+
+      const imageBlob = await fetch(`data:image/png;base64,${init_image}`).then(r => r.blob());
+      formData.append('file', imageBlob);
+      console.log('Added Ghibli params and image blob to FormData');
+
+      console.log('Sending multipart/form-data request to:', `${API_BASE_URL}/${apiEndpoint}/`);
       response = await fetch(`${API_BASE_URL}/${apiEndpoint}/`, {
         method: 'POST',
         body: formData
@@ -115,7 +154,6 @@ export async function POST(request: NextRequest) {
       const responseData = await response.json();
       return NextResponse.json(responseData);
     } else if (contentType.includes('image/')) {
-      // Handle image response
       console.log('Processing binary image response');
       const arrayBuffer = await response.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);

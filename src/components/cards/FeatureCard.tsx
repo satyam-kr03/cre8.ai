@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 interface FeatureCardProps {
   title: string;
@@ -8,9 +9,10 @@ interface FeatureCardProps {
   imageSrc: string;
   badge?: string;
   alt: string;
+  link: string;
 }
 
-export default function FeatureCard({ title, description, imageSrc, badge, alt }: FeatureCardProps) {
+export default function FeatureCard({ title, description, imageSrc, badge, alt, link }: FeatureCardProps) {
   return (
     <Card className="overflow-hidden border-gray-200 transition-shadow hover:shadow-md">
       <div className="relative h-48 w-full overflow-hidden">
@@ -35,6 +37,7 @@ export default function FeatureCard({ title, description, imageSrc, badge, alt }
         <CardDescription className="text-sm text-gray-600">{description}</CardDescription>
       </CardContent>
       <CardFooter className="pt-0">
+        <Link href={link}>
         <Button variant="ghost" size="sm" className="px-0">
           <span>Try now</span>
           <svg
@@ -46,6 +49,7 @@ export default function FeatureCard({ title, description, imageSrc, badge, alt }
             <path d="M8.59 16.59L13.17 12L8.59 7.41L10 6L16 12L10 18L8.59 16.59Z" fill="currentColor" />
           </svg>
         </Button>
+        </Link>
       </CardFooter>
     </Card>
   );

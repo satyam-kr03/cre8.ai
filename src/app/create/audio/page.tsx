@@ -1,16 +1,18 @@
 "use client";
 
-import React, { useState, ChangeEvent, useRef, useEffect } from "react";
+import React, { useState, ChangeEvent, useRef, useEffect, useContext } from "react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/layout/Header";
 import AIPromptButton from "@/components/ui/AIPromptButton";
 import { cleanPromptText } from "@/lib/textUtils";
 import AudioWaveAnimation from "@/components/ui/AudioWaveAnimation";
+import AuthCheck, { AuthContext } from '@/components/auth/AuthCheck';
 
 const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 const API_BASE_URL = "/api";
 
 export default function AudioCreation() {
+  const { isAuthenticated, forceRefresh } = useContext(AuthContext);
   const [text, setText] = useState("");
   const [musicPrompt, setMusicPrompt] = useState("");
   const [generating, setGenerating] = useState(false);
@@ -36,7 +38,6 @@ export default function AudioCreation() {
     return () => window.removeEventListener('resize', checkIsMobile);
   }, []);
 
-  // Clean up audio URL when component unmounts
   React.useEffect(() => {
     return () => {
       if (audioUrl) {
@@ -45,7 +46,6 @@ export default function AudioCreation() {
     };
   }, [audioUrl]);
 
-  // Add event listeners to the audio element to track playing state
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -63,8 +63,7 @@ export default function AudioCreation() {
       audio.removeEventListener('pause', handlePause);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, [audioUrl]); // Re-run when audioUrl changes
-
+  }, [audioUrl]); 
   const handleTextChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     const newText = e.target.value;
     setText(newText);
@@ -150,6 +149,78 @@ export default function AudioCreation() {
     document.body.removeChild(a);
   };
 
+  const handleAddToGallery = async () => {
+    if (!isAuthenticated) {
+      alert("Please sign in to save to gallery");
+      return;
+    }
+    
+    if (!audioUrl) return;
+    
+    try {
+      // Show loading state  
+      setGenerating(true);
+      
+      // Get the audio content
+      const response = await fetch(audioUrl);
+      const blob = await response.blob();
+      
+      // Convert to base64
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve) => {
+        reader.onloadend = () => {
+          const base64data = reader.result as string;
+          const base64Content = base64data.split(',')[1];
+          resolve(base64Content);
+        };
+      });
+      reader.readAsDataURL(blob);
+      
+      const base64Content = await base64Promise;
+      
+      // Determine type
+      const type = activeTab === "text-to-speech" ? "Speech" : "Music";
+      const currentPrompt = activeTab === "text-to-speech" ? text : musicPrompt;
+      const contentType = activeTab === "text-to-speech" ? "audio/mpeg" : "audio/wav";
+      
+      // Prepare the gallery item data
+      const galleryData = {
+        type: type,
+        prompt: currentPrompt,
+        contentData: base64Content,
+        contentType: contentType,
+        settings: {
+          activeTab: activeTab
+        }
+      };
+      
+      // Send to the API
+      const saveResponse = await fetch('/api/gallery', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(galleryData)
+      });
+      
+      if (!saveResponse.ok) {
+        const errorData = await saveResponse.json();
+        throw new Error(errorData.error || 'Failed to save to gallery');
+      }
+      
+      const result = await saveResponse.json();
+      console.log('Successfully added to gallery:', result);
+      
+      // Show success message
+      alert('Successfully added to your gallery!');
+    } catch (error) {
+      console.error('Error adding to gallery:', error);
+      alert('Error adding to gallery: ' + (error instanceof Error ? error.message : String(error)));
+    } finally {
+      setGenerating(false);
+    }
+  };
+  
   const generateAIPrompt = async () => {
     const basePrompt = activeTab === "text-to-speech" ? text : musicPrompt;
     if (!basePrompt.trim()) return;
@@ -219,225 +290,255 @@ export default function AudioCreation() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      
-      <AudioWaveAnimation 
-        color="#3b82f6"
-      />
+    <AuthCheck>
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        
+        <AudioWaveAnimation 
+          color="#3b82f6"
+        />
 
 
-      <main className="max-w-4xl mx-auto p-4 pt-6">
-        <h1 className="text-2xl font-bold mb-6 text-gray-800">Audio Generation</h1>
+        <main className="max-w-4xl mx-auto p-4 pt-6">
+          <h1 className="text-2xl font-bold mb-6 text-gray-800">Audio Generation</h1>
 
-        {/* Option Selection Bar */}
-        <div className="mb-6 bg-white rounded-lg shadow-sm overflow-hidden border">
-          <div className="flex border-b">
-            <button 
-              className={`flex items-center px-5 py-4 font-medium text-sm ${
-                activeTab === "text-to-speech" 
-                ? "text-blue-600 border-b-2 border-blue-600" 
-                : "text-gray-600 hover:text-gray-800"
-              }`}
-              onClick={() => handleTabChange("text-to-speech")}
-            >
-              <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM20 16H5.17L4 17.17V4H20V16Z" fill="currentColor"/>
-                <path d="M12 15L17 10L15.59 8.59L13 11.17V6H11V11.17L8.41 8.59L7 10L12 15Z" fill="currentColor"/>
-              </svg>
-              TEXT TO SPEECH
-            </button>
-            <button 
-              className={`flex items-center px-5 py-4 font-medium text-sm ${
-                activeTab === "text-to-music" 
-                ? "text-blue-600 border-b-2 border-blue-600" 
-                : "text-gray-600 hover:text-gray-800"
-              }`}
-              onClick={() => handleTabChange("text-to-music")}
-            >
-              <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 3V13.55C11.41 13.21 10.73 13 10 13C7.79 13 6 14.79 6 17C6 19.21 7.79 21 10 21C12.21 21 14 19.21 14 17V7H18V3H12Z" fill="currentColor"/>
-              </svg>
-              TEXT TO MUSIC
-            </button>
-          </div>
-        </div>
-
-        {/* Main Content Area */}
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden border">
-          {activeTab === "text-to-speech" && (
-            <div>
-              {/* Text Input Area */}
-              <div className="p-6">
-                <textarea
-                  className={`w-full h-60 p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    isGeneratingPrompt && activeTab === "text-to-speech"
-                    ? 'bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent bg-300% animate-gradient font-bold' 
-                    : 'text-gray-800'
-                  }`}
-                  placeholder="Enter text to convert to speech. For example: Welcome to our application! We're excited to have you here."
-                  value={text}
-                  onChange={handleTextChange}
-                  maxLength={maxChars}
-                />
-              </div>
-
-              {/* Action Buttons */}
-              <div className="p-4 border-t flex items-center justify-between bg-gray-50">
-                <div className="flex-1"></div>
-
-                {/* Generate button */}
-                <div className="flex items-center gap-2">
-                  <AIPromptButton
-                    onClick={generateAIPrompt}
-                    disabled={isGeneratingPrompt || generating || !text.trim()}
-                    isGenerating={isGeneratingPrompt && activeTab === "text-to-speech"}
-                    size={isMobile ? 'sm' : 'md'}
-                    tooltipText="Enhance text with AI"
-                  />
-                  
-                  <Button 
-                    className="rounded-lg bg-blue-600 hover:bg-blue-700 text-white"
-                    onClick={handleGenerate}
-                    disabled={generating || text.trim().length === 0}
-                  >
-                    {generating ? (
-                      <>
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM10 16.5V7.5L16 12L10 16.5Z" fill="currentColor"/>
-                        </svg>
-                        Generate
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "text-to-music" && (
-            <div>
-              {/* Text to Music content */}
-              <div className="p-6">
-                <textarea
-                  className={`w-full h-60 p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    isGeneratingPrompt && activeTab === "text-to-music"
-                    ? 'bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent bg-300% animate-gradient font-bold' 
-                    : 'text-gray-800'
-                  }`}
-                  placeholder="Describe the music you want to generate. For example: A gentle piano melody with soft strings and a calm atmosphere, perfect for meditation."
-                  maxLength={maxChars}
-                  value={musicPrompt}
-                  onChange={handleMusicPromptChange}
-                />
-              </div>
-
-              {/* Action Buttons */}
-              <div className="p-4 border-t flex items-center justify-between bg-gray-50">
-                <div className="flex-1"></div>
-
-                <div className="flex items-center gap-2">
-                  <AIPromptButton
-                    onClick={generateAIPrompt}
-                    disabled={isGeneratingPrompt || generating || !musicPrompt.trim()}
-                    isGenerating={isGeneratingPrompt && activeTab === "text-to-music"}
-                    size={isMobile ? 'sm' : 'md'}
-                    tooltipText="Enhance music prompt with AI"
-                  />
-                  
-                  <Button 
-                    className="rounded-lg bg-blue-600 hover:bg-blue-700 text-white"
-                    onClick={handleGenerate}
-                    disabled={generating || musicPrompt.trim().length === 0}
-                  >
-                    {generating ? (
-                      <>
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM10 16.5V7.5L16 12L10 16.5Z" fill="currentColor"/>
-                        </svg>
-                        Generate
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {/* Error Message */}
-          {error && (
-            <div className="p-4 border-t bg-red-50 text-red-700">
-              <div className="flex items-center">
-                <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          {/* Option Selection Bar */}
+          <div className="mb-6 bg-white rounded-lg shadow-sm overflow-hidden border">
+            <div className="flex border-b">
+              <button 
+                className={`flex items-center px-5 py-4 font-medium text-sm ${
+                  activeTab === "text-to-speech" 
+                  ? "text-blue-600 border-b-2 border-blue-600" 
+                  : "text-gray-600 hover:text-gray-800"
+                }`}
+                onClick={() => handleTabChange("text-to-speech")}
+              >
+                <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM20 16H5.17L4 17.17V4H20V16Z" fill="currentColor"/>
+                  <path d="M12 15L17 10L15.59 8.59L13 11.17V6H11V11.17L8.41 8.59L7 10L12 15Z" fill="currentColor"/>
                 </svg>
-                <span>{error}</span>
-              </div>
+                TEXT TO SPEECH
+              </button>
+              <button 
+                className={`flex items-center px-5 py-4 font-medium text-sm ${
+                  activeTab === "text-to-music" 
+                  ? "text-blue-600 border-b-2 border-blue-600" 
+                  : "text-gray-600 hover:text-gray-800"
+                }`}
+                onClick={() => handleTabChange("text-to-music")}
+              >
+                <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 3V13.55C11.41 13.21 10.73 13 10 13C7.79 13 6 14.79 6 17C6 19.21 7.79 21 10 21C12.21 21 14 19.21 14 17V7H18V3H12Z" fill="currentColor"/>
+                </svg>
+                TEXT TO MUSIC
+              </button>
             </div>
-          )}
-          
-        </div>
-        {audioUrl && (
-        <div className="w-full relative overflow-hidden border-b border-gray-200">
-          <div className={`absolute inset-0 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 opacity-70 transition-opacity duration-500 ${
-            isPlaying ? 'opacity-70' : 'opacity-0'
-          }`} />
-          
-          <div className="relative z-10 max-w-7xl mx-auto">
-            <div className="flex items-center justify-between py-4 px-6">
-              <h3 className="font-medium text-gray-800">
-                {activeTab === "text-to-speech" ? "Generated Speech" : "Generated Music"}
-              </h3>
+          </div>
+
+          {/* Main Content Area */}
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden border">
+            {activeTab === "text-to-speech" && (
+              <div>
+                {/* Text Input Area */}
+                <div className="p-6">
+                  <textarea
+                    className={`w-full h-60 p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      isGeneratingPrompt && activeTab === "text-to-speech"
+                      ? 'bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent bg-300% animate-gradient font-bold' 
+                      : 'text-gray-800'
+                    }`}
+                    placeholder="Enter text to convert to speech. For example: Welcome to our application! We're excited to have you here."
+                    value={text}
+                    onChange={handleTextChange}
+                    maxLength={maxChars}
+                  />
+                </div>
+
+                {/* Action Buttons */}
+                <div className="p-4 border-t flex items-center justify-between bg-gray-50">
+                  <div className="flex-1"></div>
+
+                  {/* Generate button */}
+                  <div className="flex items-center gap-2">
+                    <AIPromptButton
+                      onClick={generateAIPrompt}
+                      disabled={isGeneratingPrompt || generating || !text.trim()}
+                      isGenerating={isGeneratingPrompt && activeTab === "text-to-speech"}
+                      size={isMobile ? 'sm' : 'md'}
+                      tooltipText="Enhance text with AI"
+                    />
+                    
+                    <Button 
+                      className="rounded-lg bg-blue-600 hover:bg-blue-700 text-white relative group"
+                      onClick={handleGenerate}
+                      disabled={generating || text.trim().length === 0}
+                      key={`gen-button-${text.trim().length === 0 ? 'empty' : 'text'}`}
+                    >
+                      {generating ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM10 16.5V7.5L16 12L10 16.5Z" fill="currentColor"/>
+                          </svg>
+                          Generate
+                        </>
+                      )}
+                      {text.trim().length === 0 && (
+                        <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-white border border-gray-200 text-gray-800 text-xs px-2 py-1 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
+                          Please enter text
+                        </div>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "text-to-music" && (
+              <div>
+                {/* Text to Music content */}
+                <div className="p-6">
+                  <textarea
+                    className={`w-full h-60 p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      isGeneratingPrompt && activeTab === "text-to-music"
+                      ? 'bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent bg-300% animate-gradient font-bold' 
+                      : 'text-gray-800'
+                    }`}
+                    placeholder="Describe the music you want to generate. For example: A gentle piano melody with soft strings and a calm atmosphere, perfect for meditation."
+                    maxLength={maxChars}
+                    value={musicPrompt}
+                    onChange={handleMusicPromptChange}
+                  />
+                </div>
+
+                {/* Action Buttons */}
+                <div className="p-4 border-t flex items-center justify-between bg-gray-50">
+                  <div className="flex-1"></div>
+
+                  <div className="flex items-center gap-2">
+                    <AIPromptButton
+                      onClick={generateAIPrompt}
+                      disabled={isGeneratingPrompt || generating || !musicPrompt.trim()}
+                      isGenerating={isGeneratingPrompt && activeTab === "text-to-music"}
+                      size={isMobile ? 'sm' : 'md'}
+                      tooltipText="Enhance music prompt with AI"
+                    />
+                    
+                    <Button 
+                      className="rounded-lg bg-blue-600 hover:bg-blue-700 text-white relative group"
+                      onClick={handleGenerate}
+                      disabled={generating || musicPrompt.trim().length === 0}
+                      key={`gen-button-${musicPrompt.trim().length === 0 ? 'empty' : 'prompt'}`}
+                    >
+                      {generating ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM10 16.5V7.5L16 12L10 16.5Z" fill="currentColor"/>
+                          </svg>
+                          Generate
+                        </>
+                      )}
+                      {musicPrompt.trim().length === 0 && (
+                        <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-white border border-gray-200 text-gray-800 text-xs px-2 py-1 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
+                          Please enter prompt
+                        </div>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Error Message */}
+            {error && (
+              <div className="p-4 border-t bg-red-50 text-red-700">
+                <div className="flex items-center">
+                  <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{error}</span>
+                </div>
+              </div>
+            )}
+            
+          </div>
+          {audioUrl && (
+          <div className="w-full relative overflow-hidden border-b border-gray-200">
+            <div className={`absolute inset-0 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 opacity-70 transition-opacity duration-500 ${
+              isPlaying ? 'opacity-70' : 'opacity-0'
+            }`} />
+            
+            <div className="relative z-10 max-w-7xl mx-auto">
+              <div className="flex items-center justify-between py-4 px-6">
+                <h3 className="font-medium text-gray-800">
+                  {activeTab === "text-to-speech" ? "Generated Speech" : "Generated Music"}
+                </h3>
+                
+                {/* Button container */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-lg text-xs flex items-center gap-1 border-blue-600 text-blue-600 hover:bg-blue-50"
+                    onClick={handleDownload}
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Download
+                  </Button>
+                
+                  {/* Add to Gallery Button */}
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-1 text-sm border-gray-300 hover:bg-gray-100"
+                    onClick={handleAddToGallery}
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Add to Gallery
+                  </Button>
+                </div>
+              </div>
               
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-lg text-xs flex items-center gap-1 border-blue-600 text-blue-600 hover:bg-blue-50"
-                onClick={handleDownload}
-              >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                Download
-              </Button>
-            </div>
-            
-       
-            
-            {/* Audio Controls */}
-            <div className="flex justify-center pb-6 px-6">
-              <audio 
-                ref={audioRef} 
-                controls 
-                className="w-full max-w-2xl"
-                onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
-                onEnded={() => setIsPlaying(false)}
-              >
-                <source src={audioUrl} type={activeTab === "text-to-speech" ? "audio/mpeg" : "audio/wav"} />
-                Your browser does not support the audio element.
-              </audio>
+         
+              
+              {/* Audio Controls */}
+              <div className="flex justify-center pb-6 px-6">
+                <audio 
+                  ref={audioRef} 
+                  controls 
+                  className="w-full max-w-2xl"
+                  onPlay={() => setIsPlaying(true)}
+                  onPause={() => setIsPlaying(false)}
+                  onEnded={() => setIsPlaying(false)}
+                >
+                  <source src={audioUrl} type={activeTab === "text-to-speech" ? "audio/mpeg" : "audio/wav"} />
+                  Your browser does not support the audio element.
+                </audio>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-      </main>
-    </div>
+        )}
+        </main>
+      </div>
+    </AuthCheck>
   );
 }

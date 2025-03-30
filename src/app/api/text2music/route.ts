@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+const API_BASE_URL = process.env.EXTERNAL_API_BASE_URL;
+
+if (!API_BASE_URL) {
+  throw new Error('Please define the EXTERNAL_API_BASE_URL environment variable in .env.local');
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -17,7 +23,7 @@ export async function POST(request: NextRequest) {
     formData.append('prompt', body.prompt);
     
     // Try first with FormData
-    let response = await fetch('https://cool-starfish-suitable.ngrok-free.app/text2music/', {
+    let response = await fetch(`${API_BASE_URL}/text2music/`, {
       method: 'POST',
       body: formData,
     });
@@ -26,7 +32,7 @@ export async function POST(request: NextRequest) {
     if (response.status === 422 || response.status === 415) {
       console.log("FormData approach failed, trying JSON...");
       
-      response = await fetch('https://cool-starfish-suitable.ngrok-free.app/text2music/', {
+      response = await fetch(`${API_BASE_URL}/text2music/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
