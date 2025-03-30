@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, ChangeEvent, useRef } from "react";
+import React, { useState, ChangeEvent, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/layout/Header";
 import AIPromptButton from "@/components/ui/AIPromptButton";
 import { cleanPromptText } from "@/lib/textUtils";
+import AudioWaveAnimation from "@/components/ui/AudioWaveAnimation";
 
 const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 const API_BASE_URL = "/api";
@@ -19,9 +20,10 @@ export default function AudioCreation() {
   const [isMobile, setIsMobile] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const maxChars = 500;
+  const maxChars = 2000;
   const [activeTab, setActiveTab] = useState<"text-to-speech" | "text-to-music">("text-to-speech");
   const audioRef = useRef<HTMLAudioElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   React.useEffect(() => {
     const checkIsMobile = () => {
@@ -42,6 +44,26 @@ export default function AudioCreation() {
       }
     };
   }, [audioUrl]);
+
+  // Add event listeners to the audio element to track playing state
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
+    const handleEnded = () => setIsPlaying(false);
+    
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
+    audio.addEventListener('ended', handleEnded);
+    
+    return () => {
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('ended', handleEnded);
+    };
+  }, [audioUrl]); // Re-run when audioUrl changes
 
   const handleTextChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     const newText = e.target.value;
@@ -199,32 +221,46 @@ export default function AudioCreation() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
+      
+      <AudioWaveAnimation 
+        color="#3b82f6"
+      />
+
+
       <main className="max-w-4xl mx-auto p-4 pt-6">
-        <h1 className="text-3xl font-bold mb-6">Audio Generation</h1>
+        <h1 className="text-2xl font-bold mb-6 text-gray-800">Audio Generation</h1>
 
         {/* Option Selection Bar */}
-        <div className="flex flex-wrap gap-3 mb-6">
-          <Button 
-            variant="outline" 
-            className={`rounded-full bg-white shadow-sm ${activeTab === "text-to-speech" ? "border-2 border-blue-500 text-blue-600" : ""}`}
-            onClick={() => handleTabChange("text-to-speech")}
-          >
-            <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM20 16H5.17L4 17.17V4H20V16Z" fill="currentColor"/>
-              <path d="M12 15L17 10L15.59 8.59L13 11.17V6H11V11.17L8.41 8.59L7 10L12 15Z" fill="currentColor"/>
-            </svg>
-            TEXT TO SPEECH
-          </Button>
-          <Button 
-            variant="outline" 
-            className={`rounded-full bg-white shadow-sm ${activeTab === "text-to-music" ? "border-2 border-blue-500 text-blue-600" : ""}`}
-            onClick={() => handleTabChange("text-to-music")}
-          >
-            <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 3V13.55C11.41 13.21 10.73 13 10 13C7.79 13 6 14.79 6 17C6 19.21 7.79 21 10 21C12.21 21 14 19.21 14 17V7H18V3H12Z" fill="currentColor"/>
-            </svg>
-            TEXT TO MUSIC
-          </Button>
+        <div className="mb-6 bg-white rounded-lg shadow-sm overflow-hidden border">
+          <div className="flex border-b">
+            <button 
+              className={`flex items-center px-5 py-4 font-medium text-sm ${
+                activeTab === "text-to-speech" 
+                ? "text-blue-600 border-b-2 border-blue-600" 
+                : "text-gray-600 hover:text-gray-800"
+              }`}
+              onClick={() => handleTabChange("text-to-speech")}
+            >
+              <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM20 16H5.17L4 17.17V4H20V16Z" fill="currentColor"/>
+                <path d="M12 15L17 10L15.59 8.59L13 11.17V6H11V11.17L8.41 8.59L7 10L12 15Z" fill="currentColor"/>
+              </svg>
+              TEXT TO SPEECH
+            </button>
+            <button 
+              className={`flex items-center px-5 py-4 font-medium text-sm ${
+                activeTab === "text-to-music" 
+                ? "text-blue-600 border-b-2 border-blue-600" 
+                : "text-gray-600 hover:text-gray-800"
+              }`}
+              onClick={() => handleTabChange("text-to-music")}
+            >
+              <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 3V13.55C11.41 13.21 10.73 13 10 13C7.79 13 6 14.79 6 17C6 19.21 7.79 21 10 21C12.21 21 14 19.21 14 17V7H18V3H12Z" fill="currentColor"/>
+              </svg>
+              TEXT TO MUSIC
+            </button>
+          </div>
         </div>
 
         {/* Main Content Area */}
@@ -234,7 +270,7 @@ export default function AudioCreation() {
               {/* Text Input Area */}
               <div className="p-6">
                 <textarea
-                  className={`w-full h-40 p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  className={`w-full h-60 p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                     isGeneratingPrompt && activeTab === "text-to-speech"
                     ? 'bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent bg-300% animate-gradient font-bold' 
                     : 'text-gray-800'
@@ -244,13 +280,10 @@ export default function AudioCreation() {
                   onChange={handleTextChange}
                   maxLength={maxChars}
                 />
-                <div className="flex justify-end mt-2 text-sm text-gray-500">
-                  {charCount}/{maxChars}
-                </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="p-4 border-t flex items-center justify-between">
+              <div className="p-4 border-t flex items-center justify-between bg-gray-50">
                 <div className="flex-1"></div>
 
                 {/* Generate button */}
@@ -264,7 +297,7 @@ export default function AudioCreation() {
                   />
                   
                   <Button 
-                    className="rounded-full bg-black hover:bg-gray-800 text-white"
+                    className="rounded-lg bg-blue-600 hover:bg-blue-700 text-white"
                     onClick={handleGenerate}
                     disabled={generating || text.trim().length === 0}
                   >
@@ -295,7 +328,7 @@ export default function AudioCreation() {
               {/* Text to Music content */}
               <div className="p-6">
                 <textarea
-                  className={`w-full h-40 p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  className={`w-full h-60 p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                     isGeneratingPrompt && activeTab === "text-to-music"
                     ? 'bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent bg-300% animate-gradient font-bold' 
                     : 'text-gray-800'
@@ -305,13 +338,10 @@ export default function AudioCreation() {
                   value={musicPrompt}
                   onChange={handleMusicPromptChange}
                 />
-                <div className="flex justify-end mt-2 text-sm text-gray-500">
-                  {musicCharCount}/{maxChars}
-                </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="p-4 border-t flex items-center justify-between">
+              <div className="p-4 border-t flex items-center justify-between bg-gray-50">
                 <div className="flex-1"></div>
 
                 <div className="flex items-center gap-2">
@@ -324,7 +354,7 @@ export default function AudioCreation() {
                   />
                   
                   <Button 
-                    className="rounded-full bg-black hover:bg-gray-800 text-white"
+                    className="rounded-lg bg-blue-600 hover:bg-blue-700 text-white"
                     onClick={handleGenerate}
                     disabled={generating || musicPrompt.trim().length === 0}
                   >
@@ -349,35 +379,6 @@ export default function AudioCreation() {
               </div>
             </div>
           )}
-
-          {/* Audio Player Section */}
-          {audioUrl && (
-            <div className="p-6 border-t bg-gray-50">
-              <h3 className="font-medium text-gray-800 mb-4">
-                {activeTab === "text-to-speech" ? "Generated Speech" : "Generated Music"}
-              </h3>
-              
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                <audio ref={audioRef} controls className="w-full">
-                  <source src={audioUrl} type={activeTab === "text-to-speech" ? "audio/mpeg" : "audio/wav"} />
-                  Your browser does not support the audio element.
-                </audio>
-                
-                <div className="flex justify-end mt-4">
-                  <Button
-                    variant="outline"
-                    className="rounded-full text-sm flex items-center gap-1"
-                    onClick={handleDownload}
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    Download
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
           
           {/* Error Message */}
           {error && (
@@ -390,7 +391,52 @@ export default function AudioCreation() {
               </div>
             </div>
           )}
+          
         </div>
+        {audioUrl && (
+        <div className="w-full relative overflow-hidden border-b border-gray-200">
+          <div className={`absolute inset-0 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 opacity-70 transition-opacity duration-500 ${
+            isPlaying ? 'opacity-70' : 'opacity-0'
+          }`} />
+          
+          <div className="relative z-10 max-w-7xl mx-auto">
+            <div className="flex items-center justify-between py-4 px-6">
+              <h3 className="font-medium text-gray-800">
+                {activeTab === "text-to-speech" ? "Generated Speech" : "Generated Music"}
+              </h3>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-lg text-xs flex items-center gap-1 border-blue-600 text-blue-600 hover:bg-blue-50"
+                onClick={handleDownload}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Download
+              </Button>
+            </div>
+            
+       
+            
+            {/* Audio Controls */}
+            <div className="flex justify-center pb-6 px-6">
+              <audio 
+                ref={audioRef} 
+                controls 
+                className="w-full max-w-2xl"
+                onPlay={() => setIsPlaying(true)}
+                onPause={() => setIsPlaying(false)}
+                onEnded={() => setIsPlaying(false)}
+              >
+                <source src={audioUrl} type={activeTab === "text-to-speech" ? "audio/mpeg" : "audio/wav"} />
+                Your browser does not support the audio element.
+              </audio>
+            </div>
+          </div>
+        </div>
+      )}
       </main>
     </div>
   );

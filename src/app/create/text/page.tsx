@@ -6,12 +6,37 @@ import AIPromptButton from "@/components/ui/AIPromptButton";
 import ImageUploader from "@/components/ui/ImageUploader";
 import Image from "next/image";
 
-const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
+const API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 
 interface UploadedFile extends File {
     name: string;
     type: string;
     preview?: string;
+}
+
+interface TextPart {
+    text: string;
+}
+
+interface ImagePart {
+    inline_data: {
+        mime_type: string;
+        data: string;
+    };
+}
+
+type ContentPart = TextPart | ImagePart;
+
+interface GeminiRequestContent {
+    parts: ContentPart[];
+}
+
+interface GeminiRequest {
+    contents: GeminiRequestContent[];
+    generation_config: {
+        temperature: number;
+        max_output_tokens: number;
+    };
 }
 
 const TextGenerator = () => {
@@ -63,10 +88,57 @@ const TextGenerator = () => {
             const imageBase64 = await getBase64(uploadedImage);
             const base64Data = imageBase64.split(',')[1];
             
-            // Mock API call - in a real app, you would call an AI service
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            // Prepare the request for Gemini API to analyze the image
+            const requestData: GeminiRequest = {
+                contents: [
+                    {
+                        parts: [
+                            { text: "Analyze this image and generate a detailed, descriptive prompt that captures its key elements, mood, style, and composition. The prompt should be useful for generating creative text about this image." } as TextPart,
+                            {
+                                inline_data: {
+                                    mime_type: uploadedImage.type,
+                                    data: base64Data
+                                }
+                            } as ImagePart
+                        ]
+                    }
+                ],
+                generation_config: {
+                    temperature: 0.7,
+                    max_output_tokens: 300
+                }
+            };
             
-            const generatedPrompt = "Write a detailed analysis of the composition, subject matter, and style of this image, focusing on its artistic elements.";
+            console.log("Sending image to Gemini for analysis...");
+            
+            const response = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData),
+                }
+            );
+            
+            const data = await response.json();
+            console.log("API Response for image analysis:", data);
+            
+            if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts) {
+                console.error("Unexpected API response format:", data);
+                
+                if (data.error) {
+                    console.error("API Error:", data.error.message || data.error);
+                    alert(`Error: ${data.error.message || "Failed to analyze image"}`);
+                } else {
+                    alert("Failed to analyze image. Check console for details.");
+                }
+                return;
+            }
+            
+            const generatedPrompt = data.candidates[0].content.parts[0].text;
+            console.log("Generated prompt from image:", generatedPrompt);
             
             const cleanedText = cleanPromptText(generatedPrompt);
             setPrompt(cleanedText);
@@ -85,21 +157,86 @@ const TextGenerator = () => {
             setIsGeneratingText(true);
             setGeneratedText("");
             
-            // Mock API call - in a real app, you would call an AI service
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            // Create an enhanced prompt that incorporates the user's selected style and preferences
+            let enhancedPrompt = prompt;
             
-            // Sample generated text based on style
-            let result = "";
-            
+            // Add style guidance based on user selection
             if (style === "creative") {
-                result = "The moonlight cascaded through the ancient windows, casting elongated shadows across the marble floor. As the clock struck midnight, the forgotten manuscripts began to whisper their secrets. Each page turned by an invisible hand, revealing tales of long-lost civilizations and cosmic mysteries that had remained concealed for centuries. The room seemed to breathe with the ancient wisdom contained within these texts, pulsating with an energy that transcended time itself.\n\nAmidst this ethereal display, a single quill rose from its inkwell, suspended in mid-air as if held by a phantom scholar. It began to dance across a blank parchment, inscribing words in an elegant script that hadn't been used for a millennium. The text spoke of celestial alignments and terrestrial powers, of gateways between dimensions and beings that existed beyond human comprehension.";
+                enhancedPrompt += "\n\nPlease respond in a creative, imaginative, and expressive style. Use vivid descriptions, metaphors, and engaging language.";
             } else if (style === "formal") {
-                result = "The aforementioned document presents substantial evidence regarding the matter at hand. Upon careful analysis of the presented data, it becomes apparent that several key factors contribute to the observed phenomenon. Firstly, the longitudinal studies conducted by Henderson et al. (2022) demonstrate a statistically significant correlation between variables A and B, with a p-value of less than 0.001.\n\nFurthermore, when considering the contextual elements outlined in Section 3.2, one must acknowledge the influential role of historical precedents. The methodological approach utilized in this investigation adheres to established protocols within the field, ensuring reliability and reproducibility of results. In conclusion, the findings herein support the initial hypothesis while simultaneously revealing avenues for further inquiry.";
-            } else {
-                result = "So here's the deal – I was thinking about what you asked, and honestly, it's pretty fascinating stuff! The way these ideas connect is mind-blowing when you really get into it. Like, who would have thought that something so ordinary could have such cool implications?\n\nAnyway, I did some digging online and found that lots of people are talking about this exact thing right now. Some folks are totally on board with the concept, while others are super skeptical – typical internet, right? But what I found most interesting was how this whole thing ties back to everyday experiences we all have but never really think about critically.";
+                enhancedPrompt += "\n\nPlease respond in a formal, professional, and structured style. Use academic language, proper citations if relevant, and maintain a scholarly tone.";
+            } else if (style === "casual") {
+                enhancedPrompt += "\n\nPlease respond in a casual, conversational, and relaxed style. Use informal language, a friendly tone, and write as if chatting with a friend.";
             }
             
-            setGeneratedText(result);
+            // Add length guidance based on maxTokens
+            if (maxTokens <= 200) {
+                enhancedPrompt += "\n\nKeep your response concise and brief.";
+            } else if (maxTokens >= 800) {
+                enhancedPrompt += "\n\nPlease provide a detailed and comprehensive response.";
+            }
+            
+            console.log("Enhanced prompt:", enhancedPrompt);
+            
+            // Call Gemini API
+            const requestData: GeminiRequest = {
+                contents: [
+                    {
+                        parts: [
+                            { text: enhancedPrompt } as TextPart
+                        ]
+                    }
+                ],
+                generation_config: {
+                    temperature: temperature,
+                    max_output_tokens: maxTokens
+                }
+            };
+            
+            // If image is uploaded, include it in the prompt
+            if (uploadedImage) {
+                const imageBase64 = await getBase64(uploadedImage);
+                const base64Data = imageBase64.split(',')[1];
+                
+                const imagePart: ImagePart = {
+                    inline_data: {
+                        mime_type: uploadedImage.type,
+                        data: base64Data
+                    }
+                };
+                
+                requestData.contents[0].parts.push(imagePart);
+            }
+            
+            const response = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData),
+                }
+            );
+            
+            const data = await response.json();
+            console.log("API Response:", data);
+            
+            if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts) {
+                console.error("Unexpected API response format:", data);
+                
+                if (data.error) {
+                    console.error("API Error:", data.error.message || data.error);
+                    alert(`Error: ${data.error.message || "Failed to generate text"}`);
+                } else {
+                    alert("Failed to generate text. Check console for details.");
+                }
+                return;
+            }
+            
+            const generatedText = data.candidates[0].content.parts[0].text;
+            setGeneratedText(generatedText);
+            
         } catch (error) {
             console.error('Error generating text:', error);
             alert("An error occurred while generating the text.");
@@ -430,4 +567,4 @@ const TextGenerator = () => {
     );
 };
 
-export default TextGenerator; 
+export default TextGenerator;

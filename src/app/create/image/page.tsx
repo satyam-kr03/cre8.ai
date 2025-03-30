@@ -25,7 +25,7 @@ const ImageGenerator = () => {
     const [isMobile, setIsMobile] = useState(false);
     const [variationStrength, setVariationStrength] = useState(0.5);
     const [generationSteps, setGenerationSteps] = useState(25);
-    const [imageDimension, setImageDimension] = useState("1920x1080");
+    const [imageDimension, setImageDimension] = useState("LANDSCAPE");
 
     useEffect(() => {
         const checkIsMobile = () => {
@@ -129,28 +129,81 @@ const ImageGenerator = () => {
             setIsGeneratingImage(true);
             setGeneratedImage(null);
             
-            const client = new InferenceClient(HF_API_KEY);
+            let requestBody;
             
-            const [width, height] = imageDimension.split('x').map(d => parseInt(d));
+            // Prepare the request body based on whether we have an uploaded image
+            if (uploadedImage) {
+                // Convert image to base64
+                const imageBase64 = await getBase64(uploadedImage);
+                const base64Data = imageBase64.split(',')[1];
+                
+                requestBody = {
+                    endpoint: 'img2img',
+                    prompt: prompt,
+                    init_image: base64Data,
+                    size: imageDimension,
+                    steps: generationSteps
+                };
+            } else {
+                requestBody = {
+                    endpoint: 'text2img',
+                    prompt: prompt,
+                    size: imageDimension,
+                    steps: generationSteps
+                };
+            }
             
-            const image = await client.textToImage({
-                provider: "hf-inference",
-                model: "black-forest-labs/FLUX.1-dev",
-                inputs: prompt,
-                parameters: { 
-                    num_inference_steps: generationSteps,
-                    guidance_scale: variationStrength * 10,
-                    width: width,
-                    height: height
+            console.log('Sending request to generate image...');
+            
+            // Call our proxy API route
+            const response = await fetch('/api/imageproxy', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
                 },
+                body: JSON.stringify(requestBody),
             });
             
-            const imageUrl = URL.createObjectURL(image);
-            setGeneratedImage(imageUrl);
+            console.log('Received response with status:', response.status);
+            const contentType = response.headers.get('Content-Type');
+            console.log('Response content type:', contentType);
+            
+            if (!response.ok) {
+                let errorMessage = `API returned status: ${response.status}`;
+                try {
+                    const errorData = await response.json();
+                    if (errorData.error) {
+                        errorMessage = errorData.error;
+                    }
+                } catch (e) {
+                    console.error('Could not parse error response as JSON');
+                }
+                throw new Error(errorMessage);
+            }
+            
+            // The API should return the image as base64 in a JSON response
+            const data = await response.json();
+            console.log('Response data keys:', Object.keys(data));
+            
+            if (!data.image) {
+                console.error('Missing image data in response:', data);
+                throw new Error("No image data returned from API");
+            }
+            
+            // Convert base64 back to blob and create URL
+            try {
+                const imageBlob = await fetch(`data:image/png;base64,${data.image}`).then(r => r.blob());
+                const imageUrl = URL.createObjectURL(imageBlob);
+                setGeneratedImage(imageUrl);
+                console.log('Successfully created image URL');
+            } catch (e) {
+                console.error('Error creating image from base64:', e);
+                throw new Error('Failed to process the generated image');
+            }
             
         } catch (error) {
             console.error('Error generating image:', error);
-            alert("An error occurred while generating the image.");
+            alert("An error occurred while generating the image: " + (error instanceof Error ? error.message : String(error)));
         } finally {
             setIsGeneratingImage(false);
         }
@@ -221,32 +274,6 @@ const ImageGenerator = () => {
                     <div className="mt-8 space-y-5">
                         <h2 className="text-lg font-semibold text-gray-800 mb-3">Generation Settings</h2>
                         
-                        <div className="p-4 bg-white rounded-xl shadow-sm border border-gray-200">
-                            <h3 className="font-medium mb-3 text-gray-800 flex items-center">
-                                <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
-                                Variation Strength
-                            </h3>
-                            <div className="flex flex-col space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs text-gray-500">Subtle</span>
-                                    <span className="text-xs text-gray-500">Strong</span>
-                                </div>
-                                <input 
-                                    type="range" 
-                                    min="0" 
-                                    max="1" 
-                                    step="0.01" 
-                                    value={variationStrength}
-                                    onChange={(e) => setVariationStrength(parseFloat(e.target.value))}
-                                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                                />
-                                <div className="text-xs font-medium text-blue-600 text-right">
-                                    {variationStrength.toFixed(2)}
-                                </div>
-                            </div>
-                        </div>
 
                         <div className="p-4 bg-white rounded-xl shadow-sm border border-gray-200">
                             <h3 className="font-medium mb-3 text-gray-800 flex items-center">
@@ -283,23 +310,23 @@ const ImageGenerator = () => {
                                 Image Dimensions
                             </h3>
                             <div className="grid grid-cols-2 gap-3">
-                                <div className={`relative border rounded-lg p-3 ${imageDimension === "1080x1080" ? "border-blue-500 bg-blue-50" : "border-gray-200"} transition-all cursor-pointer`}
-                                    onClick={() => setImageDimension("1080x1080")}>
+                                <div className={`relative border rounded-lg p-3 ${imageDimension === "SQUARE" ? "border-blue-500 bg-blue-50" : "border-gray-200"} transition-all cursor-pointer`}
+                                    onClick={() => setImageDimension("SQUARE")}>
                                     <input 
                                         type="radio" 
                                         id="square" 
                                         name="dimension" 
-                                        value="1080x1080"
-                                        checked={imageDimension === "1080x1080"}
+                                        value="SQUARE"
+                                        checked={imageDimension === "SQUARE"}
                                         onChange={(e) => setImageDimension(e.target.value)}
                                         className="sr-only" 
                                     />
                                     <label htmlFor="square" className="text-sm flex flex-col items-center cursor-pointer">
                                         <div className="w-12 h-12 bg-gray-100 border border-gray-300 mb-1 rounded-md"></div>
-                                        <span className={imageDimension === "1080x1080" ? "text-blue-600 font-medium" : "text-gray-600"}>Square</span>
-                                        <span className="text-xs text-gray-500">1080×1080</span>
+                                        <span className={imageDimension === "SQUARE" ? "text-blue-600 font-medium" : "text-gray-600"}>Square</span>
+                                        <span className="text-xs text-gray-500">1280×1280</span>
                                     </label>
-                                    {imageDimension === "1080x1080" && (
+                                    {imageDimension === "SQUARE" && (
                                         <div className="absolute top-2 right-2 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
                                             <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
@@ -307,23 +334,23 @@ const ImageGenerator = () => {
                                         </div>
                                     )}
                                 </div>
-                                <div className={`relative border rounded-lg p-3 ${imageDimension === "1920x1080" ? "border-blue-500 bg-blue-50" : "border-gray-200"} transition-all cursor-pointer`}
-                                    onClick={() => setImageDimension("1920x1080")}>
+                                <div className={`relative border rounded-lg p-3 ${imageDimension === "LANDSCAPE" ? "border-blue-500 bg-blue-50" : "border-gray-200"} transition-all cursor-pointer`}
+                                    onClick={() => setImageDimension("LANDSCAPE")}>
                                     <input 
                                         type="radio" 
                                         id="landscape" 
                                         name="dimension" 
-                                        value="1920x1080"
-                                        checked={imageDimension === "1920x1080"}
+                                        value="LANDSCAPE"
+                                        checked={imageDimension === "LANDSCAPE"}
                                         onChange={(e) => setImageDimension(e.target.value)}
                                         className="sr-only" 
                                     />
                                     <label htmlFor="landscape" className="text-sm flex flex-col items-center cursor-pointer">
                                         <div className="w-14 h-10 bg-gray-100 border border-gray-300 mb-1 rounded-md"></div>
-                                        <span className={imageDimension === "1920x1080" ? "text-blue-600 font-medium" : "text-gray-600"}>Landscape</span>
-                                        <span className="text-xs text-gray-500">1920×1080</span>
+                                        <span className={imageDimension === "LANDSCAPE" ? "text-blue-600 font-medium" : "text-gray-600"}>Landscape</span>
+                                        <span className="text-xs text-gray-500">2048×1280</span>
                                     </label>
-                                    {imageDimension === "1920x1080" && (
+                                    {imageDimension === "LANDSCAPE" && (
                                         <div className="absolute top-2 right-2 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
                                             <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
