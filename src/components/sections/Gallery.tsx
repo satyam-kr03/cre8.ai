@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 interface GalleryItem {
@@ -15,79 +15,39 @@ interface GalleryItem {
   isLiked?: boolean;
 }
 
-// Sample gallery items to use as fallback
-const sampleGalleryItems: GalleryItem[] = [
+// Custom gallery items
+const customGalleryItems: GalleryItem[] = [
   {
-    id: "sample1",
-    imageUrl: "https://cdn.cp.adobe.io/content/2/rendition/4398c8c4-f47b-457e-97b4-a59c383c68f8/artwork/238ee2ad-b95f-4cf2-a1b3-188a449e21d4/version/0/format/jpg/dimension/width/size/350",
-    prompt: "Butterfly shaped only by a flower meadow, white background",
+    id: "custom1",
+    imageUrl: "/images/GT1.jpeg",
+    prompt: "The image depicts a young man with anime-style features, gazing pensively upward against a nighttime backdrop.",
+    isLiked: true,
+  },
+  {
+    id: "custom2",
+    imageUrl: "/images/GT5.jpeg",
+    prompt: "A rainy evening in a bustling city, with wet streets reflecting the glow of streetlights and neon signs. Pedestrians in coats and umbrellas hurry along sidewalks, their footsteps splashing in puddles. Cars drive slowly, their headlights illuminating the misty air. Raindrops streak across glass windows, and water droplets slide down. In the distance, faint chatter and the hum of traffic blend with the sound of rain falling.",
     isLiked: false,
   },
   {
-    id: "sample2",
-    imageUrl: "https://firefly.adobe.com/generated/0B0xEZZrMd-RKA3j0GsZUHA.jpeg",
-    prompt: "Surreal portrait of the girl with wildflowers wreath, simple background, risograph printing",
+    id: "custom3",
+    imageUrl: "/images/GT3.png",
+    prompt: "A hyperrealistic painting in the style of Caspar David Friedrich, depicting a bustling city street scene at golden hour. The focal point is a magnificent, ornate brick building with a steeply pitched green roof and a tall, slender clock tower, reminiscent of late 19th-century architecture.  A bronze statue of a ballerina in a flowing tutu stands gracefully in the foreground, positioned centrally, seemingly observing the urban activity.  The street is filled with vintage cars from the 1950s-1970s, pedestrians dressed in period clothing, and modern elements like electric scooters subtly integrated, creating a blend of eras.  The sky is",
     isLiked: true,
   },
   {
-    id: "sample3",
-    imageUrl: "https://firefly.adobe.com/generated/gqD_6xLxTDSszDGlaqfKIg.jpeg",
-    prompt: "Top-down, birds-eye view of a frogs body, fully visible from above. The frogs skin is covered in intricate, psychedelic patterns...",
-    isLiked: true,
-  },
-  {
-    id: "sample4",
-    imageUrl: "https://firefly.adobe.com/generated/R1RQFyF7To-lTtOJg9Bdfg.jpeg",
-    prompt: "In the style of mosaic art, create an oil painting depicting two magnolia trees...",
+    id: "custom4",
+    imageUrl: "/images/GT4.png",
+    prompt: "The image depicts a silhouetted girl standing in a field of tall grass under a large, vibrant moon.  Numerous butterflies, rendered in various shades of purple and cyan, flutter around her and the moon. The overall color palette is a dreamy blend of purples, blues, and pinks, creating a soft, ethereal atmosphere.  The composition is centered around the girl, with the moon acting as a powerful backdrop and the butterflies creating a sense of movement and enchantment.  The mood is serene, peaceful, and slightly melancholic, with a touch of magical wonder. The style is reminiscent of digital art or fantasy illustration.",
     isLiked: true,
   },
 ];
 
 export default function Gallery() {
-  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [useApiItems, setUseApiItems] = useState(true);
+  const [galleryItems] = useState<GalleryItem[]>(customGalleryItems);
+  const [isLoading] = useState(false);
+  const [error] = useState<string | null>(null);
   const router = useRouter();
-
-  useEffect(() => {
-    async function fetchGalleryItems() {
-      try {
-        setIsLoading(true);
-        // Fetch more items so we have enough after filtering out audio
-        const response = await fetch('/api/gallery?limit=12');
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch gallery items');
-        }
-        
-        const data = await response.json();
-        const items = data.items || [];
-        
-        // Filter out audio items
-        const filteredItems = items.filter((item: GalleryItem) => !item.settings?.isAudio);
-        
-        // If we have enough items after filtering, use them
-        // Otherwise, use sample items
-        if (filteredItems.length >= 4) {
-          setGalleryItems(filteredItems);
-          setUseApiItems(true);
-        } else {
-          setGalleryItems(sampleGalleryItems);
-          setUseApiItems(false);
-        }
-      } catch (err) {
-        console.error('Error fetching gallery:', err);
-        setError('Failed to load gallery items');
-        setGalleryItems(sampleGalleryItems);
-        setUseApiItems(false);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    
-    fetchGalleryItems();
-  }, []);
 
   const handleViewGallery = () => {
     router.push('/gallery');
@@ -111,7 +71,7 @@ export default function Gallery() {
     );
   }
 
-  if (error && !useApiItems && galleryItems.length === 0) {
+  if (error && galleryItems.length === 0) {
     return (
       <section className="py-16 bg-gray-50">
         <div className="max-w-screen-xl mx-auto px-4">
@@ -137,43 +97,14 @@ export default function Gallery() {
   const renderGalleryItem = (item: GalleryItem) => (
     <div key={item.id} className="group rounded-lg overflow-hidden bg-white shadow-md transition-all duration-300 hover:shadow-lg">
       <div className="relative aspect-square overflow-hidden">
-        {useApiItems ? (
-          item.type === 'Image' ? (
-            <Image
-              src={`data:${item.contentType};base64,${item.contentData}`}
-              alt={item.prompt || "Gallery item"}
-              fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-              style={{ objectFit: "cover" }}
-              className="transition-transform duration-500 group-hover:scale-105"
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full bg-gradient-to-r from-indigo-100 to-purple-100 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black opacity-20"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="h-16 w-16 rounded-full bg-white bg-opacity-20 flex items-center justify-center animate-pulse">
-                  <div className="h-14 w-14 rounded-full bg-white bg-opacity-30 flex items-center justify-center">
-                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-              <svg className="w-24 h-24 text-indigo-500 opacity-20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-            </div>
-          )
-        ) : (
-          <Image
-            src={item.imageUrl || ""}
-            alt={item.prompt || "Gallery item"}
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-            style={{ objectFit: "cover" }}
-            className="transition-transform duration-500 group-hover:scale-105"
-          />
-        )}
+        <Image
+          src={item.imageUrl || ""}
+          alt={item.prompt || "Gallery item"}
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+          style={{ objectFit: "cover" }}
+          className="transition-transform duration-500 group-hover:scale-105"
+        />
       </div>
       <div className="p-4">
         <p className="text-sm text-gray-600 line-clamp-2">{item.prompt || "No prompt provided"}</p>
@@ -192,7 +123,7 @@ export default function Gallery() {
         </h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {galleryItems.slice(0, 4).map(renderGalleryItem)}
+          {galleryItems.map(renderGalleryItem)}
         </div>
 
         <div className="mt-10 text-center">
