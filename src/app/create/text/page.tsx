@@ -153,10 +153,7 @@ const TextGenerator = () => {
     };
 
     const generateText = async () => {
-        if (!isAuthenticated) {
-            alert("Please sign in to generate content");
-            return;
-        }
+       
         
         if (!prompt.trim()) return;
         
@@ -536,7 +533,6 @@ const TextGenerator = () => {
                             <div className="absolute right-4 bottom-4 flex items-center gap-2 z-20">
                                 <AIPromptButton
                                     onClick={generateAIDescription}
-                                    disabled={isGeneratingDesc || isGeneratingText || !uploadedImage}
                                     isGenerating={isGeneratingDesc}
                                     size={isMobile ? 'sm' : 'md'}
                                     tooltipText={!uploadedImage ? "Upload an image first" : "Generate AI description from image"}
@@ -548,7 +544,6 @@ const TextGenerator = () => {
                                         : 'bg-blue-600 hover:bg-blue-700 transition-colors'
                                     } relative group`}
                                     onClick={generateText}
-                                    disabled={isGeneratingText || !prompt.trim() || !isAuthenticated}
                                 >
                                     {isGeneratingText ? (
                                         <>
@@ -566,12 +561,8 @@ const TextGenerator = () => {
                                             Generate
                                         </>
                                     )}
-                                    {!isAuthenticated && (
-                                        <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-white border border-gray-200 text-gray-800 text-xs px-2 py-1 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
-                                            Sign in required to generate
-                                        </div>
-                                    )}
-                                    {isAuthenticated && !prompt.trim() && (
+                                  
+                                    {!prompt.trim() && (
                                         <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-white border border-gray-200 text-gray-800 text-xs px-2 py-1 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
                                             Please enter a prompt
                                         </div>

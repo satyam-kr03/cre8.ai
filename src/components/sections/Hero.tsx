@@ -18,7 +18,7 @@ export default function Hero() {
         <p className="text-blue-600 font-medium mb-2">Generate images, audio, and video.</p>
         
         {/* Animation positioned behind the heading */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-xl z-0 opacity-30">
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-xl z-0 opacity-30 pointer-events-none">
           <div style={{ filter: 'brightness(200%) contrast(0)' }}>
             <Lottie animationData={helloAnimationData} />
           </div>
