@@ -6,7 +6,7 @@ const galleryItemSchema = new Schema({
   type: { 
     type: String, 
     required: true,
-    enum: ['Image', 'Ghibli', 'Animation', 'Speech', 'Music']
+    enum: ['Image', 'Ghibli', 'Animation', 'Speech', 'Music', 'Video']
   },
   prompt: { 
     type: String, 

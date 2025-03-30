@@ -8,22 +8,21 @@ export default function PhotoshopWeb() {
         <div className="flex flex-col md:flex-row items-center gap-8">
           <div className="flex-1">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Go further with Photoshop on the web
+              All Your Creative Needs in One Place
             </h2>
             <p className="text-gray-600 mb-6">
-              Photoshop on the web delivers powerful editing tools in a
-              streamlined interface. Preview the app now - no sign in or download
-              required.
+             Create stunning images, videos, and graphics with our powerful tools.
+             Our user-friendly interface makes it easy to create beautiful designs,
+             edit photos, and add text to your images.
             </p>
-            <Button className="bg-gray-900 hover:bg-gray-800">Try it</Button>
           </div>
           <div className="flex-1">
             <div className="relative h-[300px] w-full rounded-lg overflow-hidden shadow-xl">
               <Image
-                src="https://ext.same-assets.com/426488002/2421270945.bin"
+                src="/images/template4.png"
                 alt="Photoshop on the web interface"
                 fill
-                style={{ objectFit: "cover" }}
+                style={{ objectFit: "cover" , borderRadius: "10px", border: "1px solid #ccc"}}
                 className="rounded-lg"
               />
               {/* Overlay UI elements that mimic the photoshop interface */}
