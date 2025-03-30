@@ -3,18 +3,18 @@ import FeatureCard from "@/components/cards/FeatureCard";
 export default function FeaturesGrid() {
   const features = [
     {
-      title: "Image to Ghibli",
-      description: "Generate a Ghibli-style animation from an image.",
+      title: "Image to Anime Character",
+      description: "Generate a Anime Character from an image.",
       imageSrc: "https://ext.same-assets.com/426488002/2216797986.bin",
       alt: "Text to image feature",
-      link: "/create/ghibli",
+      link: "/create/anime",
     },
     {
-      title: "Generative fill",
-      description: "Use a brush to remove objects or paint in new ones.",
+      title: "Image to Pixar",
+      description: "Generate a Pixar style image from an image.",
       imageSrc: "https://ext.same-assets.com/426488002/581310823.bin",
       alt: "Generative fill feature",
-      link: "/",
+      link: "/create/pixar",
     },
     {
       title: "Scene to image (beta)",

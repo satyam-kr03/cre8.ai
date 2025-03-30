@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     
     // Determine which API endpoint to use
     let apiEndpoint = endpoint; // Use the endpoint directly
-    if (!['img2img', 'text2img', 'img2ghibli'].includes(apiEndpoint)) {
+    if (!['img2img', 'text2img', 'img2ghibli', 'img2pixar'].includes(apiEndpoint)) {
       apiEndpoint = init_image ? 'img2img' : 'text2img'; // Fallback logic
       console.warn(`Invalid endpoint specified, defaulting to ${apiEndpoint}`);
     }
@@ -91,6 +91,30 @@ export async function POST(request: NextRequest) {
       const imageBlob = await fetch(`data:image/png;base64,${init_image}`).then(r => r.blob());
       formData.append('file', imageBlob);
       console.log('Added Ghibli params and image blob to FormData');
+
+      console.log('Sending multipart/form-data request to:', `${API_BASE_URL}/${apiEndpoint}/`);
+      response = await fetch(`${API_BASE_URL}/${apiEndpoint}/`, {
+        method: 'POST',
+        body: formData
+      });
+    } else if (apiEndpoint === 'img2pixar') {
+      console.log('Using img2pixar endpoint');
+      if (!init_image) {
+        return NextResponse.json({ error: 'Missing required image for img2pixar' }, { status: 400 });
+      }
+      
+      const formData = new FormData();
+      
+      if (prompt) formData.append('prompt', prompt);
+      formData.append('strength', strength ? strength.toString() : '0.8'); // Default strength if not provided
+      formData.append('width', width.toString());
+      formData.append('height', height.toString());
+      // Add steps parameter if provided
+      if (steps) formData.append('steps', steps.toString());
+
+      const imageBlob = await fetch(`data:image/png;base64,${init_image}`).then(r => r.blob());
+      formData.append('file', imageBlob);
+      console.log('Added Pixar params and image blob to FormData');
 
       console.log('Sending multipart/form-data request to:', `${API_BASE_URL}/${apiEndpoint}/`);
       response = await fetch(`${API_BASE_URL}/${apiEndpoint}/`, {

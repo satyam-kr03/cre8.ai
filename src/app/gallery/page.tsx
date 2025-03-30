@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/layout/Header';
 import { useAuth } from '@clerk/nextjs';
@@ -7,7 +6,6 @@ import AuthCheck from '@/components/auth/AuthCheck';
 import Image from 'next/image';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-// Define types for gallery items
 interface GalleryItem {
   _id: string;
   type: string;

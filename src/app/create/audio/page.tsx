@@ -1,18 +1,16 @@
 "use client";
 
-import React, { useState, ChangeEvent, useRef, useEffect, useContext } from "react";
+import React, { useState, ChangeEvent, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/layout/Header";
 import AIPromptButton from "@/components/ui/AIPromptButton";
 import { cleanPromptText } from "@/lib/textUtils";
 import AudioWaveAnimation from "@/components/ui/AudioWaveAnimation";
-import AuthCheck, { AuthContext } from '@/components/auth/AuthCheck';
 
 const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 const API_BASE_URL = "/api";
 
-export default function AudioCreation() {
-  const { isAuthenticated, forceRefresh } = useContext(AuthContext);
+const AudioGenerator = () => {
   const [text, setText] = useState("");
   const [musicPrompt, setMusicPrompt] = useState("");
   const [generating, setGenerating] = useState(false);
@@ -150,15 +148,13 @@ export default function AudioCreation() {
   };
 
   const handleAddToGallery = async () => {
-    if (!isAuthenticated) {
-      alert("Please sign in to save to gallery");
+    if (!audioUrl) {
+      console.error("No generated audio to add to gallery");
       return;
     }
     
-    if (!audioUrl) return;
-    
     try {
-      // Show loading state  
+      // Show loading state
       setGenerating(true);
       
       // Get the audio content
@@ -179,17 +175,18 @@ export default function AudioCreation() {
       const base64Content = await base64Promise;
       
       // Determine type
-      const type = activeTab === "text-to-speech" ? "Speech" : "Music";
       const currentPrompt = activeTab === "text-to-speech" ? text : musicPrompt;
       const contentType = activeTab === "text-to-speech" ? "audio/mpeg" : "audio/wav";
       
       // Prepare the gallery item data
       const galleryData = {
-        type: type,
+        type: 'Image',
         prompt: currentPrompt,
         contentData: base64Content,
         contentType: contentType,
         settings: {
+          isAudio: true,
+          audioType: activeTab === "text-to-speech" ? "Speech" : "Music",
           activeTab: activeTab
         }
       };
@@ -290,14 +287,12 @@ export default function AudioCreation() {
   };
 
   return (
-    <AuthCheck>
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        
+    <div className="flex flex-col min-h-screen bg-white text-gray-800">
+      <Header />
+      <div className="flex-1 bg-gray-50">
         <AudioWaveAnimation 
           color="#3b82f6"
         />
-
 
         <main className="max-w-4xl mx-auto p-4 pt-6">
           <h1 className="text-2xl font-bold mb-6 text-gray-800">Audio Generation</h1>
@@ -539,6 +534,8 @@ export default function AudioCreation() {
         )}
         </main>
       </div>
-    </AuthCheck>
+    </div>
   );
-}
+};
+
+export default AudioGenerator;

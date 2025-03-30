@@ -15,7 +15,9 @@ export default function Header() {
               <path d="M3 18H21V16H3V18ZM3 13H21V11H3V13ZM3 6V8H21V6H3Z" fill="currentColor" />
             </svg>
           </button>
-          Cre8.ai
+          <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-purple-600 via-blue-500 to-indigo-500 text-transparent bg-clip-text">
+            Cre8Ai
+          </Link>
           <nav className="hidden md:flex items-center space-x-6 ml-6">
             <Link href="/" className="text-sm font-medium text-gray-700 hover:text-gray-900">Home</Link>
             <Link href="/about" className="text-sm font-medium text-gray-700 hover:text-gray-900">About</Link>
