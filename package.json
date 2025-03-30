@@ -29,6 +29,7 @@
     "clerk": "^0.8.3",
     "clsx": "^2.1.1",
     "fabric": "^6.6.1",
+    "lottie-react": "^2.4.1",
     "lucide-react": "^0.475.0",
     "mongoose": "^8.13.1",
     "next": "^15.2.0",

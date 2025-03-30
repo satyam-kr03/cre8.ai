@@ -2,6 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
+import Lottie from 'lottie-react';
+import helloAnimationData from '../../../public/animations/hello.json';
 
 export default function Hero() {
   return (
@@ -14,7 +16,15 @@ export default function Hero() {
 
       <div className="relative max-w-screen-xl mx-auto px-4 text-center">
         <p className="text-blue-600 font-medium mb-2">Generate images, audio, and now video.</p>
-        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-16 mt-16">Explore new ways to create</h1>
+        
+        {/* Animation positioned behind the heading */}
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-xl z-0 opacity-30">
+          <div style={{ filter: 'brightness(200%) contrast(0)' }}>
+            <Lottie animationData={helloAnimationData} />
+          </div>
+        </div>
+        
+        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-16 mt-16 relative z-10">Explore new ways to create</h1>
 
         <div className="max-w-2xl mx-auto mb-10">
           <Tabs defaultValue="image" className="w-full">
