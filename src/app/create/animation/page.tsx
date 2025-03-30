@@ -80,10 +80,7 @@ const AnimationGenerator = () => {
     // Function to generate prompt from image using Gemini
     const generateAIDescription = async () => {
         // Check authentication first
-        if (!isAuthenticated) {
-            alert("Please sign in to use AI features");
-            return;
-        }
+
         
         if (!uploadedImage) return;
         
@@ -156,12 +153,7 @@ const AnimationGenerator = () => {
     };
 
     const generateAnimation = async () => {
-        // Check authentication first
-        if (!isAuthenticated) {
-            alert("Please sign in to generate content");
-            return;
-        }
-        
+
         if (!prompt.trim()) return;
         
         try {
@@ -233,11 +225,7 @@ const AnimationGenerator = () => {
     };
 
     const handleAddToGallery = async () => {
-        // Check authentication first
-        if (!isAuthenticated) {
-            alert("Please sign in to save to gallery");
-            return;
-        }
+
         
         if (!generatedAnimation) return;
         
@@ -505,18 +493,13 @@ const AnimationGenerator = () => {
                                  {/* AI Prompt Button */}
                                 <AIPromptButton
                                     onClick={generateAIDescription}
-                                    disabled={isGeneratingDesc || isGenerating || !uploadedImage || !isAuthenticated}
                                     isGenerating={isGeneratingDesc}
                                     size={isMobile ? 'sm' : 'md'}
-                                    tooltipText={!isAuthenticated 
-                                        ? "Sign in required" 
-                                        : (!uploadedImage ? "Upload an image first" : "Generate prompt from image")}
                                 />
                                  {/* Generate Button */}
                                  <button 
                                     className={`px-3 py-1.5 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg font-medium text-white flex items-center gap-1 ${isGenerating ? 'bg-purple-500 animate-pulse' : 'bg-blue-600 hover:bg-blue-700 transition-colors'} relative group`}
                                     onClick={generateAnimation}
-                                    disabled={isGenerating || isGeneratingDesc || !prompt.trim() || !isAuthenticated}
                                 >
                                     {isGenerating ? (
                                         <>
@@ -529,11 +512,7 @@ const AnimationGenerator = () => {
                                             Generate
                                         </>
                                     )}
-                                    {!isAuthenticated && (
-                                        <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-white border border-gray-200 text-gray-800 text-xs px-2 py-1 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
-                                            Sign in required to generate
-                                        </div>
-                                    )}
+                                   
                                     {isAuthenticated && !prompt.trim() && (
                                         <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-white border border-gray-200 text-gray-800 text-xs px-2 py-1 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
                                             Please enter a prompt
