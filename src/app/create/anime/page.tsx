@@ -40,9 +40,12 @@ interface GeminiRequest {
 
 const AnimeGenerator = () => {
     const [prompt, setPrompt] = useState("");
-    const [isGenerating, setIsGenerating] = useState(false);
-    const [uploadedImage, setUploadedImage] = useState<UploadedFile | null>(null);
+    const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
     const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+    const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+    const [savingToGallery, setSavingToGallery] = useState(false);
+    const [generationSteps, setGenerationSteps] = useState(20);
+    const [uploadedImage, setUploadedImage] = useState<UploadedFile | null>(null);
     const [isMobile, setIsMobile] = useState(false);
     const [strength, setStrength] = useState(0.8); 
     const [imageDimension, setImageDimension] = useState("LANDSCAPE"); // SQUARE | LANDSCAPE
@@ -151,7 +154,7 @@ const AnimeGenerator = () => {
         }
         
         try {
-            setIsGenerating(true);
+            setIsGeneratingImage(true);
             setGeneratedImage(null);
             
             const imageBase64 = await getBase64(uploadedImage);
@@ -219,19 +222,16 @@ const AnimeGenerator = () => {
             console.error('Error generating Anime image:', error);
             alert("An error occurred while generating the Anime image: " + (error instanceof Error ? error.message : String(error)));
         } finally {
-            setIsGenerating(false);
+            setIsGeneratingImage(false);
         }
     };
 
     const handleAddToGallery = async () => {
-        if (!generatedImage) {
-            console.error("No generated image to add to gallery");
-            return;
-        }
+        if (!generatedImage) return;
         
         try {
-            // Show loading state
-            setIsGenerating(true);
+            // Show loading state specifically for the gallery button
+            setSavingToGallery(true);
             
             // Convert blob URL to base64 data
             const response = await fetch(generatedImage);
@@ -258,9 +258,10 @@ const AnimeGenerator = () => {
                 contentData: base64Content,
                 contentType: blob.type || 'image/png',
                 settings: {
+                    steps: generationSteps,
+                    imageDimension: imageDimension,
                     styleType: 'Anime',
-                    strength: strength,
-                    imageDimension: imageDimension
+                    hasReference: !!uploadedImage
                 }
             };
             
@@ -287,7 +288,7 @@ const AnimeGenerator = () => {
             console.error('Error adding to gallery:', error);
             alert('Error adding to gallery: ' + (error instanceof Error ? error.message : String(error)));
         } finally {
-            setIsGenerating(false);
+            setSavingToGallery(false);
         }
     };
 
@@ -434,7 +435,7 @@ const AnimeGenerator = () => {
 
                 {/* Main Content */}
                 <div className="flex-1 flex flex-col p-5 overflow-y-auto bg-gray-50">
-                    {isGenerating ? (
+                    {isGeneratingImage ? (
                         <div className="flex-1 flex flex-col items-center justify-center">
                             <div className="relative w-full h-[calc(100vh-340px)] min-h-[300px] max-h-[60vh] rounded-xl overflow-hidden shadow-md bg-gray-200 flex items-center justify-center">
                                 <div className="absolute inset-0 bg-gradient-to-r from-blue-100/50 via-purple-100/50 to-pink-100/50 animate-gradient bg-300% shadow-[0_0_30px_rgba(192,132,252,0.3)]"></div>
@@ -481,16 +482,28 @@ const AnimeGenerator = () => {
                                     Save Image
                                 </button>
                                 {/* Add to Gallery Button */}
-                                <Button 
+                                <Button
                                     variant="outline"
                                     size="sm"
                                     className="flex items-center gap-1 text-sm border-gray-300 hover:bg-gray-100"
                                     onClick={handleAddToGallery}
+                                    disabled={savingToGallery}
                                 >
-                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                     </svg>
-                                    Add to Gallery
+                                    {savingToGallery ? (
+                                        <>
+                                            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                            </svg>
+                                            <span className="ml-1">Saving...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                            Add to Gallery
+                                        </>
+                                    )}
                                 </Button>
                             </div>
                         </div>
@@ -514,19 +527,19 @@ const AnimeGenerator = () => {
                             {/* AI Prompt Button */}
                              <AIPromptButton
                                 onClick={generateAIDescription}
-                                disabled={isGeneratingDesc || isGenerating || !uploadedImage}
+                                disabled={isGeneratingDesc || isGeneratingImage || !uploadedImage}
                                 isGenerating={isGeneratingDesc}
                                 size={isMobile ? 'sm' : 'md'}
                                 tooltipText={!uploadedImage ? "Upload an image first" : "Generate prompt from image"}
                             />
                              {/* Generate Button */}
                              <button 
-                                className={`px-3 py-1.5 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg font-medium text-white flex items-center gap-1 ${isGenerating ? 'bg-purple-500 animate-pulse' : 'bg-blue-600 hover:bg-blue-700 transition-colors'} relative group`}
+                                className={`px-3 py-1.5 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg font-medium text-white flex items-center gap-1 ${isGeneratingImage ? 'bg-purple-500 animate-pulse' : 'bg-blue-600 hover:bg-blue-700 transition-colors'} relative group`}
                                 onClick={generateGhibliImage}
-                                disabled={isGenerating || isGeneratingDesc || !uploadedImage}
+                                disabled={isGeneratingImage || isGeneratingDesc || !uploadedImage}
                                 key={`gen-button-${!uploadedImage ? 'no-img' : 'img'}`}
                             >
-                                {isGenerating ? (
+                                {isGeneratingImage ? (
                                     <>
                                         <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                                         Generating...
