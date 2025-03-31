@@ -16,7 +16,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Cre8.ai | Generative AI for everyone",
-  description: "Create high-quality images, text effects, and more with Cre8.ai, the AI art generator that brings your imagination to life.",
+  description:
+    "Create high-quality images, text effects, and more with Cre8.ai, the AI art generator that brings your imagination to life.",
   icons: {
     icon: "/favicon.ico",
   },
@@ -32,13 +33,14 @@ export default function RootLayout({
       <html lang="en">
         <head>
           <link
-          href="https://fonts.googleapis.com/icon?family=Material+Icons"
-          rel="stylesheet"
-        />
-      </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} font-sans`}
-      >
+            href="https://fonts.googleapis.com/icon?family=Material+Icons"
+            rel="stylesheet"
+          />
+        </head>
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
+          suppressHydrationWarning
+        >
           <ClientBody>{children}</ClientBody>
         </body>
       </html>

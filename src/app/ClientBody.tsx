@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect } from "react";
 
 export default function ClientBody({
@@ -13,9 +12,6 @@ export default function ClientBody({
     document.body.className = "antialiased";
   }, []);
 
-  return (
-    <body className="antialiased" suppressHydrationWarning>
-      {children}
-    </body>
-  );
+  // Return a div or fragment, not another body tag
+  return <>{children}</>;
 }
