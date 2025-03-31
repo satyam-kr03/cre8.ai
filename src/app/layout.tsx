@@ -3,17 +3,14 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ClientBody from "./ClientBody";
 import { ClerkProvider } from "@clerk/nextjs";
-
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
-
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
-
 export const metadata: Metadata = {
   title: "Cre8.ai | Generative AI for everyone",
   description:
@@ -22,7 +19,6 @@ export const metadata: Metadata = {
     icon: "/favicon.ico",
   },
 };
-
 export default function RootLayout({
   children,
 }: {
@@ -38,8 +34,7 @@ export default function RootLayout({
           />
         </head>
         <body
-          className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
-          suppressHydrationWarning
+          className={`${geistSans.variable} ${geistMono.variable} font-sans`}
         >
           <ClientBody>{children}</ClientBody>
         </body>
