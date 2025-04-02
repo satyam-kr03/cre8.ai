@@ -9,15 +9,15 @@ import Gallery from "@/components/sections/Gallery";
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <Header />
+      {/* <Header /> */}
       <main className="flex-1">
-        <Hero />
+        {/* <Hero /> */}
         {/* <FeaturesGrid />
         <PhotoshopWeb />
         <UniqueFeatures />
         <Gallery /> */}
       </main>
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 }
