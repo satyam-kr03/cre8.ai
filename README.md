@@ -38,7 +38,19 @@ pnpm dev
 bun dev
 ```
 
-Screenshots
+## Screenshots
 
-![alt text](public/images/ss1.png)
 ![alt text](public/images/ss2.png)
+
+## Notes
+
+We make use of the following open-source models in our studio:
+
+- MusicGen by Meta for music generation
+- Phi-4-Multimodal Instruct by Microsoft for mutliple tasks involving vison and language
+- Wan 2.1 by Alibaba for video generation
+- Stable Diffusion for image generation
+- AnimateDiff for animation generation
+- Kokoro for text-to-speech tasks
+
+All models are deployed on Spheron's decentralized compute platform, keeping scalability and efficiency in mind.
