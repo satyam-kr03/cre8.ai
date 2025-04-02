@@ -11,7 +11,7 @@ export default function Home() {
     <div className="min-h-screen flex flex-col bg-white">
       {/* <Header /> */}
       <main className="flex-1">
-        {/* <Hero /> */}
+        <Hero />
         {/* <FeaturesGrid />
         <PhotoshopWeb />
         <UniqueFeatures />
