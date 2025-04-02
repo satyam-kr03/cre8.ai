@@ -12,7 +12,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 export const metadata: Metadata = {
-  title: "Cre8.ai | Generative AI for everyone",
+  title: "Cre8.ai | Your All in One Creation Studio",
   description:
     "Create high-quality images, text effects, and more with Cre8.ai, the AI art generator that brings your imagination to life.",
   icons: {
