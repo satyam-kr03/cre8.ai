@@ -12,10 +12,10 @@ export default function Home() {
       <Header />
       <main className="flex-1">
         <Hero />
-        <FeaturesGrid />
+        {/* <FeaturesGrid />
         <PhotoshopWeb />
         <UniqueFeatures />
-        <Gallery />
+        <Gallery /> */}
       </main>
       <Footer />
     </div>
