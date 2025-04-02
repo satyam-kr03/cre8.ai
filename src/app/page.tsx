@@ -11,11 +11,11 @@ export default function Home() {
     <div className="min-h-screen flex flex-col bg-white">
       {/* <Header /> */}
       <main className="flex-1">
-        <Hero />
-        {/* <FeaturesGrid />
+        {/* <Hero /> */}
+        <FeaturesGrid />
         <PhotoshopWeb />
         <UniqueFeatures />
-        <Gallery /> */}
+        <Gallery />
       </main>
       {/* <Footer /> */}
     </div>
