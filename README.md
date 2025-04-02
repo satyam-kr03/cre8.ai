@@ -2,6 +2,8 @@
 
 A powerful AI-driven content creation platform built with Next.js.
 
+![alt text](public/images/homepage.png)
+
 ## Overview
 
 Cre8.ai helps creators, marketers, and businesses generate high-quality content using advanced open-source generative AI models. Our platform streamlines the content creation process while maintaining your unique voice and style.
@@ -16,7 +18,15 @@ Cre8.ai helps creators, marketers, and businesses generate high-quality content 
 
 ## Getting Started
 
-First, run the development server:
+Pre-requisites: Node.js
+
+Install dependencies
+
+```bash
+npm install
+```
+
+Then, run the development server:
 
 ```bash
 npm run dev
@@ -27,3 +37,8 @@ pnpm dev
 # or
 bun dev
 ```
+
+Screenshots
+
+![alt text](public/images/ss1.png)
+![alt text](public/images/ss2.png)
