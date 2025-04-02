@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import ImageUploader from "@/components/ui/ImageUploader";
 import AuthCheck, { AuthContext } from "@/components/auth/AuthCheck";
+import Image from "next/image";
 
 // Assuming GEMINI_API_KEY is available via environment variables
 const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
@@ -555,7 +556,7 @@ const AnimationGenerator = () => {
               <div className="flex-1 flex flex-col items-center justify-center">
                 <div className="relative w-full h-[calc(100vh-340px)] min-h-[300px] max-h-[60vh] rounded-xl overflow-hidden shadow-sm border border-gray-100 bg-gray-100 flex items-center justify-center">
                   {typeof window !== "undefined" && generatedAnimation && (
-                    <img
+                    <Image
                       src={generatedAnimation}
                       alt={prompt}
                       className="max-w-full max-h-full object-contain"
