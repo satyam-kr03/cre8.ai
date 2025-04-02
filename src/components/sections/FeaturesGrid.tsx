@@ -12,14 +12,14 @@ export default function FeaturesGrid() {
     {
       title: "Image to Pixar",
       description: "Generate a Pixar style image from an image.",
-      imageSrc: "/images/template1.jpeg",
+      imageSrc: "/images/Template1.jpeg",
       alt: "Generative fill feature",
       link: "/create/pixar",
     },
     {
       title: "Image to Sound Effects",
       description: "Create sound effects from images.",
-      imageSrc: "/images/template3.jpg",
+      imageSrc: "/images/Template3.jpg",
       badge: "New",
       alt: "Image to sound effects feature",
       link: "/create/sound-effects",
