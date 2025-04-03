@@ -1,5 +1,7 @@
 # Cre8.ai
 
+Our studio is now live at: [Cre8.ai](https://cre8-ai.onrender.com)
+
 A powerful AI-driven content creation platform built with Next.js.
 
 ![alt text](public/images/homepage.png)
