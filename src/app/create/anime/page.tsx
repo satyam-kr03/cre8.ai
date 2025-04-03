@@ -47,7 +47,8 @@ const AnimeGenerator = () => {
   const [generationSteps, setGenerationSteps] = useState(20);
   const [uploadedImage, setUploadedImage] = useState<UploadedFile | null>(null);
   const [isMobile, setIsMobile] = useState(false);
-  const [strength, setStrength] = useState(0.8);
+  const [strength, setStrength] = useState(0.75);
+  const [styleRatio, setStyleRatio] = useState(50);
   const [imageDimension, setImageDimension] = useState("LANDSCAPE"); // SQUARE | LANDSCAPE
   const [isGeneratingDesc, setIsGeneratingDesc] = useState(false);
 
@@ -172,6 +173,7 @@ const AnimeGenerator = () => {
         prompt: prompt, // Optional prompt
         init_image: base64Data, // The uploaded image is required
         strength: strength,
+        style_ratio: styleRatio,
         size: imageDimension,
       };
 
@@ -404,7 +406,7 @@ const AnimeGenerator = () => {
                 </div>
                 <Slider
                   defaultValue={[strength]}
-                  min={0.1}
+                  min={0.65}
                   max={1}
                   step={0.01}
                   onValueChange={(value: number[]) => setStrength(value[0])}
@@ -412,6 +414,42 @@ const AnimeGenerator = () => {
                 />
                 <div className="text-xs font-medium text-blue-600 text-right">
                   {strength.toFixed(2)}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 bg-white rounded-xl shadow-sm border border-gray-200">
+              <h3 className="font-medium mb-3 text-gray-800 flex items-center">
+                <svg
+                  className="w-4 h-4 mr-2 text-blue-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
+                </svg>
+                Style Ratio
+              </h3>
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">Keep Identity</span>
+                  <span className="text-xs text-gray-500">More Deviation</span>
+                </div>
+                <Slider
+                  defaultValue={[styleRatio]}
+                  min={0}
+                  max={100}
+                  step={5}
+                  onValueChange={(value: number[]) => setStyleRatio(value[0])}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                />
+                <div className="text-xs font-medium text-blue-600 text-right">
+                  {styleRatio.toFixed(2)}
                 </div>
               </div>
             </div>
