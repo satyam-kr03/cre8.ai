@@ -24,8 +24,16 @@ from diffusers import AnimateDiffSparseControlNetPipeline
 from diffusers.models import AutoencoderKL, MotionAdapter, SparseControlNetModel
 from diffusers.schedulers import DPMSolverMultistepScheduler
 from diffusers.utils import export_to_gif, load_image
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="Cre8.ai API")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # For development - restrict this in production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Global variables to store models
 speech_pipeline = None
@@ -232,43 +240,42 @@ async def generate_video(prompt: str = Form(...)):
     output_filename = "output.mp4"
     output_path = os.path.join(output_dir, output_filename)
     
-    # try:
+    try:
     #     # Remove the existing file if it exists
-    #     if os.path.exists(output_path):
-    #         os.remove(output_path)
+        if os.path.exists(output_path):
+            os.remove(output_path)
         
     #     # Run the video generation command with absolute paths
     #     # Note: This is using a separate process, so GPU memory persistence
     #     # would need to be handled in the Wan2.1 script itself
-    #     result = subprocess.run([
-    #         "python", "/home/h039y17/FH/Wan2.1/generate.py",
-    #         "--task", "t2v-1.3B",
-    #         "--size", "832*480",
-    #         "--ckpt_dir", "/home/h039y17/FH/Wan2.1-T2V-1.3B",
-    #         "--sample_shift", "8",
-    #         "--sample_guide_scale", "6",
-    #         "--prompt", prompt,
-    #         "--save_file", output_path,
-    #         "--offload_model", "False"  # Ensuring the model stays on GPU
-    #     ], capture_output=True, text=True)
+        result = subprocess.run([
+            "python", "/home/h039y17/FH/Wan2.1/generate.py",
+            "--task", "t2v-1.3B",
+            "--size", "832*480",
+            "--ckpt_dir", "/home/h039y17/FH/Wan2.1-T2V-1.3B",
+            "--sample_shift", "8",
+            "--sample_guide_scale", "6",
+            "--prompt", prompt,
+            "--save_file", output_path,
+            "--offload_model", "False"  # Ensuring the model stays on GPU
+        ], capture_output=True, text=True)
         
     #     # Check if the command was successful
-    #     if result.returncode != 0:
-    #         raise HTTPException(status_code=500, detail=f"Video generation failed: {result.stderr}")
+        if result.returncode != 0:
+            raise HTTPException(status_code=500, detail=f"Video generation failed: {result.stderr}")
         
     #     # Verify the file was created
-    #     if not os.path.exists(output_path):
-    #         raise HTTPException(status_code=404, detail="No video file was generated")
+        if not os.path.exists(output_path):
+            raise HTTPException(status_code=404, detail="No video file was generated")
 
-    import time
-    time.sleep(20)
-        
-    # Return the video file for download
-    return FileResponse(
-        "/home/h039y17/FH/Wan2.1/t2v-1.3B_832*480_1_1_A_bustling_urban_street_in_the_late_afternoon,_wit_20250330_234752.mp4",
-        media_type="video/mp4",
-        filename=output_filename
-    )
+        # Return the video file for download
+        return FileResponse(
+            output_path,
+            media_type="video/mp4",
+            filename=output_filename
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error in video generation: {str(e)}")
     
 @app.post("/text2animation/")
 async def generate_animation(
