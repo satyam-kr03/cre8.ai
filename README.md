@@ -11,10 +11,10 @@ Cre8.ai helps creators, marketers, and businesses generate high-quality content 
 ## Features
 
 - **AI-Powered Content Generation**: Create blog posts, social media content, and more
-- **Multiple Content Formats**: Support for text, images, and other media types
-- **Customization Options**: Tailor content to match your brand voice
+- **Multiple Content Formats**: Support for text, images, animations, audio and video
+- **Customization Options**: Tailor content to match your needs
 - **User-Friendly Interface**: Intuitive design for creators of all skill levels
-- **Export Capabilities**: Download or directly publish your content
+- **Export Capabilities**: Download your content directly without any restrictions or save them to your personal gallery
 
 ## Getting Started
 
