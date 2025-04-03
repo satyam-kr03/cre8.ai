@@ -406,7 +406,7 @@ const AnimeGenerator = () => {
                   defaultValue={[strength]}
                   min={0.1}
                   max={1}
-                  step={0.05}
+                  step={0.01}
                   onValueChange={(value: number[]) => setStrength(value[0])}
                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                 />
