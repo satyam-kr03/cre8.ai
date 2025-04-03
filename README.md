@@ -1,8 +1,32 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Cre8.ai
+
+A powerful AI-driven content creation platform built with Next.js.
+
+![alt text](public/images/homepage.png)
+
+## Overview
+
+Cre8.ai helps creators, marketers, and businesses generate high-quality content using advanced open-source generative AI models. Our platform streamlines the content creation process while maintaining your unique voice and style.
+
+## Features
+
+- **AI-Powered Content Generation**: Create blog posts, social media content, and more
+- **Multiple Content Formats**: Support for text, images, animations, audio and video
+- **Customization Options**: Tailor content to match your needs
+- **User-Friendly Interface**: Intuitive design for creators of all skill levels
+- **Export Capabilities**: Download your content directly without any restrictions or save them to your personal gallery
 
 ## Getting Started
 
-First , run the development server:
+Pre-requisites: Node.js
+
+Install dependencies
+
+```bash
+npm install
+```
+
+Then, run the development server:
 
 ```bash
 npm run dev
@@ -14,23 +38,19 @@ pnpm dev
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Screenshots
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+![alt text](public/images/ss2.png)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Notes
 
-## Learn More
+We make use of the following open-source models in our studio:
 
-To learn more about Next.js, take a look at the following resources:
+- MusicGen by Meta for music generation
+- Phi-4-Multimodal Instruct by Microsoft for mutliple tasks involving vison and language
+- Wan 2.1 by Alibaba for video generation
+- Stable Diffusion for image generation
+- AnimateDiff for animation generation
+- Kokoro for text-to-speech tasks
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+All models are deployed on Spheron's decentralized compute platform, keeping scalability and efficiency in mind.
